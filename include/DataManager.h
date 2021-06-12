@@ -2,7 +2,7 @@
 #ifndef DATA_MANAGER_H
 #define DATA_MANAGER_H
 
-#include <gb/gb.h>
+#include "shim/gb_shim.h"
 
 #include "BankData.h"
 

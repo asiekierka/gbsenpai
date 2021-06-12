@@ -1,8 +1,8 @@
 #include "Core_Main.h"
 
-#include <gb/cgb.h>
+#include "shim/gb_shim.h"
 #include <string.h>
-#include <rand.h>
+#include <stdlib.h> // GBSA - rand.h
 
 #include "Actor.h"
 #include "BankManager.h"
@@ -21,6 +21,7 @@
 #include "gbt_player.h"
 #include "data_ptrs.h"
 #include "main.h"
+#include "shim/platform.h"
 
 UBYTE game_time = 0;
 UBYTE seedRand = 2;
@@ -44,9 +45,8 @@ void vbl_update() {
 
   // Update background scroll in vbl
   // interupt to prevent tearing
-  SCX_REG = draw_scroll_x;
-  SCY_REG = draw_scroll_y;
-
+  gbsa_map_set_bg_scroll(draw_scroll_x, draw_scroll_y);
+  
 #ifdef CGB
   if (palette_dirty) {
     set_bkg_palette(0, 8, BkgPaletteBuffer);
@@ -58,17 +58,19 @@ void vbl_update() {
   if (music_mute_frames != 0) {
     music_mute_frames--;
     if (music_mute_frames == 0) {
-      gbt_enable_channels(0xF);
+      // TODO GBSA
+      // gbt_enable_channels(0xF);
     }
   }
 
   if (!hide_sprites) {
-    SHOW_SPRITES;
+    gbsa_sprite_set_enabled(1);
   }
 }
 
 void lcd_update() {
-  if (LYC_REG == 0x0) {
+	// TODO GBSA
+  /* if (LYC_REG == 0x0) {
     if(WY_REG == 0x0) {
       HIDE_SPRITES;
     }
@@ -84,21 +86,16 @@ void lcd_update() {
     // can just hide all sprites until next frame
     HIDE_SPRITES;
     LYC_REG = 0x0;
-  }
+  } */
 }
 
 int core_start() {
+  // TODO GBSA
 
-#ifdef CGB
-  if (_cpu == CGB_TYPE) {
-    cpu_fast();
-  }
-#endif
-
-  display_off();
+  // display_off();
 
   // Init LCD
-  LCDC_REG = 0x67;
+  // LCDC_REG = 0x67;
 
   // Set interupt handlers
   add_VBL(vbl_update);
@@ -106,29 +103,28 @@ int core_start() {
   add_LCD(lcd_update);
 
 #ifdef CGB
-  TMA_REG = _cpu == CGB_TYPE ? 120U : 0xBCU;
+  // TMA_REG = _cpu == CGB_TYPE ? 120U : 0xBCU;
 #else
-  TMA_REG = 0xBCU;
+  // TMA_REG = 0xBCU;
 #endif
-  TAC_REG = 0x04U;
+  // TAC_REG = 0x04U;
 
-  LYC_REG = 0x0;  // LCD interupt pos
+  // LYC_REG = 0x0;  // LCD interupt pos
 
   set_interrupts(VBL_IFLAG | TIM_IFLAG | LCD_IFLAG);
   enable_interrupts();
 
-  STAT_REG = 0x45;
+  // STAT_REG = 0x45;
 
   // Set palettes
-  BGP_REG = OBP0_REG = 0xE4U;
-  OBP1_REG = 0xD2U;
+  gbsa_palette_set_bkg_dmg(0xE4);
+  gbsa_palette_set_sprite_dmg(0, 0xE4);
+  gbsa_palette_set_sprite_dmg(1, 0xD2);
 
-  SCX_REG = 0;
-  SCY_REG = 0;
+  gbsa_map_set_bg_scroll(0, 0);
 
   // Position Window Layer
-  WX_REG = 7;
-  WY_REG = MAXWNDPOSY + 1U;
+  gbsa_window_set_pos(7, MAXWNDPOSY + 1);
 
   // Initialize structures
   memset(&script_variables, 0, sizeof(script_variables));
@@ -176,7 +172,6 @@ int core_start() {
 
   while (1) {
     while (state_running) {
-
     /* Game Core Loop Start *********************************/
 
     if (!vbl_count) {
@@ -197,13 +192,13 @@ int core_start() {
         // Seed on first button press
         if (joy) {
           seedRand--;
-          initrand((DIV_REG*256)+game_time);
+          // srand((DIV_REG*256)+game_time);
         }
       } else {
         // Seed on first button release
           if (!joy) {
           seedRand = FALSE;
-          initrand((DIV_REG*256)+game_time);
+          // srand((DIV_REG*256)+game_time);
         }
       }
     }
@@ -262,9 +257,10 @@ int core_start() {
       wait_vbl_done();
       FadeUpdate();
     }
+
     if (!fade_style)
     {
-      DISPLAY_OFF
+      // DISPLAY_OFF
     }
 
     state_running = 1;
@@ -278,8 +274,10 @@ int core_start() {
     // Disable timer script
     timer_script_duration = 0;
 
-    //BGP_REG = PAL_DEF(0U, 1U, 2U, 3U);
-    //OBP0_REG = OBP1_REG = PAL_DEF(0U, 0U, 1U, 3U);
+	// Configured in platform
+	gbsa_palette_set_bkg_dmg(PAL_DEF(0U, 1U, 2U, 3U));
+	gbsa_palette_set_sprite_dmg(0, PAL_DEF(0U, 0U, 1U, 3U));
+	gbsa_palette_set_sprite_dmg(1, PAL_DEF(0U, 0U, 1U, 3U));
 
     // Force Clear Emote
     move_sprite(0, 0, 0);
@@ -304,7 +302,7 @@ int core_start() {
     old_scroll_y = scroll_y;
 
     // Fade in new scene
-    DISPLAY_ON;
+    // DISPLAY_ON;
     FadeIn();
 
     // Run scene init script

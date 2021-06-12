@@ -1,7 +1,7 @@
 #ifndef UI_H
 #define UI_H
 
-#include <gb/gb.h>
+#include "shim/gb_shim.h"
 
 #define UI_BANK 1
 #define MENU_OPEN_Y 112

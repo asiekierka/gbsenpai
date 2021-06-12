@@ -1,7 +1,10 @@
 #ifndef ACTOR_H
 #define ACTOR_H
 
-#include <gb/gb.h>
+#include "shim/gb_shim.h"
+
+#define SCREENWIDTH_PLUS_64 (SCREENWIDTH + 64) 
+#define SCREENHEIGHT_PLUS_64 (SCREENHEIGHT + 64)
 
 #include "BankData.h"
 #include "Math.h"

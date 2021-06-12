@@ -1,3 +1,4 @@
+#include "shim/platform.h"
 #pragma bank 4
 
 #include "ScriptRunner.h"
@@ -21,7 +22,7 @@
 #include "Palette.h"
 #include "states/Platform.h"
 #include "data_ptrs.h"
-#include <rand.h>
+#include <stdlib.h> // GBSA - rand.h
 
 #define RAM_START_PTR 0xA000
 #define RAM_START_VARS_PTR 0xA0FF
@@ -829,7 +830,7 @@ void ScriptHelper_CalcDest() {
  */
 void Script_ShowSprites_b() {
   hide_sprites = FALSE;
-  SHOW_SPRITES;
+  gbsa_sprite_set_enabled(1);
 }
 
 /*
@@ -839,7 +840,7 @@ void Script_ShowSprites_b() {
  */
 void Script_HideSprites_b() {
   hide_sprites = TRUE;
-  HIDE_SPRITES;
+  gbsa_sprite_set_enabled(0);
 }
 
 /*
@@ -1881,7 +1882,7 @@ void Script_ActorInvoke_b() {
 
   events_ptr = &actors[active_script_ctx.script_actor].events_ptr;
   active_script_ctx.script_ptr_bank = events_ptr->bank;
-  active_script_ctx.script_ptr = (BankDataPtr(script_ctxs[ctx].active_script_ctx.script_ptr_bank)) + events_ptr->offset;
+  active_script_ctx.script_ptr = (BankDataPtr(events_ptr->bank)) + events_ptr->offset;
   active_script_ctx.script_update_fn = FALSE;
   active_script_ctx.script_start_ptr = active_script_ctx.script_ptr;
 }
@@ -2290,9 +2291,11 @@ void Script_ActorSetAnimate_b() {
 }
 
 void Script_IfColorSupported_b() {
+#ifdef CGB
   if (_cpu == CGB_TYPE) {
     active_script_ctx.script_ptr = active_script_ctx.script_start_ptr + (script_cmd_args[0] * 256) + script_cmd_args[1];
   }
+#endif
 }
 
 void Script_EngFieldSet_b()

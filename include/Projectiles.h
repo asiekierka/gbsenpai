@@ -1,7 +1,7 @@
 #ifndef PROJECTILE_H
 #define PROJECTILE_H
 
-#include <gb/gb.h>
+#include "shim/gb_shim.h"
 
 #include "Actor.h"
 #include "BankData.h"

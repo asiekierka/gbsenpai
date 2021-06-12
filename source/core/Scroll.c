@@ -8,6 +8,7 @@
 #include "FadeManager.h"
 #include "Palette.h"
 #include "data_ptrs.h"
+#include "shim/platform.h"
 
 INT16 scroll_x = 0;
 INT16 scroll_y = 0;
@@ -115,7 +116,7 @@ void ScrollUpdateRow(INT16 x, INT16 y) {
   screen_x = x;
   screen_y = MOD_32(y);
 
-  for (i = 0; i != 23; i++) {
+  for (i = 0; i != SCREEN_TILE_REFRES_W; i++) {
     id = 0x9800 + MOD_32(screen_x++) + ((UINT16)screen_y << 5);
 
 #ifdef CGB
@@ -227,7 +228,8 @@ void RenderScreen() {
 
   if (!fade_style)
   {
-    DISPLAY_OFF
+	// TODO GBSA
+    // DISPLAY_OFF
   } else if (!fade_timer == 0)
   {
     // Immediately set all palettes black while screen renders.
@@ -238,10 +240,13 @@ void RenderScreen() {
       }
       set_bkg_palette(0, 8, BkgPaletteBuffer);
       set_sprite_palette(0, 8, BkgPaletteBuffer);
-    } else
+    } else {
     #endif
-      OBP0_REG = 0xFF;
-      BGP_REG = 0xFF;
+		gbsa_palette_set_sprite_dmg(0, 0xFF);
+		gbsa_palette_set_bkg_dmg(0xFF);
+	#ifdef CGB
+	}
+	#endif
   }
 
   // Clear pending rows/ columns
@@ -257,7 +262,8 @@ void RenderScreen() {
 
   game_time = 0;
 
-  DISPLAY_ON;
+	// TODO GBSA
+  // DISPLAY_ON;
   if (!fade_timer == 0) {
     // Screen palate to nornmal if not fading
     ApplyPaletteChange();

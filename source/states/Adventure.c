@@ -9,7 +9,7 @@
 #include "ScriptRunner.h"
 #include "Scroll.h"
 #include "Trigger.h"
-#include "rand.h"
+#include <stdlib.h> // GBSA - rand.h
 
 #define ADVENTURE_CAMERA_DEADZONE 8
 

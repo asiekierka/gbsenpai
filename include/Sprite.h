@@ -1,7 +1,7 @@
 #ifndef SPRITE_H
 #define SPRITE_H
 
-#include <gb/gb.h>
+#include "shim/gb_shim.h"
 
 #include "Math.h"
 

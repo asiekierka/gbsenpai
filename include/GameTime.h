@@ -1,7 +1,7 @@
 #ifndef GAMETIME_H
 #define GAMETIME_H
 
-#include <gb/gb.h>
+#include "shim/gb_shim.h"
 
 #define IS_FRAME_256 ((game_time & 0xFF) == 0)
 #define IS_FRAME_128 ((game_time & 0x7F) == 0)

@@ -1,7 +1,7 @@
 #ifndef INPUT_H
 #define INPUT_H
 
-#include <gb/gb.h>
+#include "shim/gb_shim.h"
 
 #include "BankData.h"
 #include "UI.h"

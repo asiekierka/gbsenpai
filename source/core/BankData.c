@@ -4,11 +4,22 @@
 
 #include "BankManager.h"
 #include "Scroll.h"
+#include "shim/gb_shim.h"
 
 static UBYTE _save;
 
+// GBSA
+#include "banks.h"
+UBYTE _current_bank;
+
+const uint8_t *gbsa_patch_get_bank(UBYTE id) {
+#include "banks_gbsa.h"
+	debug_printf(LOG_ERROR, "Invalid get_bank call (%d)", id);
+	return NULL;
+}
+
 void SetBankedBkgData(UBYTE i, UBYTE l, unsigned char* ptr, UBYTE bank) __naked {
-  i; l; ptr; bank;
+/*   i; l; ptr; bank;
 __asm
     ldh a, (__current_bank)
     ld  (#__save),a
@@ -27,11 +38,12 @@ __asm
     ld  h, b
     ld  l, c
     jp  (hl)
-__endasm;  
+__endasm;   */
+	set_bkg_data(i, l, ptr);
 }
 
 void SetBankedSpriteData(UBYTE i, UBYTE l, unsigned char* ptr, UBYTE bank) __naked {
-  i; l; ptr; bank;
+/*  i; l; ptr; bank;
 __asm
     ldh a, (__current_bank)
     ld  (#__save),a
@@ -50,11 +62,12 @@ __asm
     ld  h, b
     ld  l, c
     jp  (hl)
-__endasm;  
+__endasm;   */
+  set_sprite_data(i, l, ptr);
 }
 
 UBYTE ReadBankedUBYTE(UBYTE bank, unsigned char* ptr) __naked {
-  ptr; bank;
+/*  ptr; bank;
 __asm
     ldh a, (__current_bank)
     ld  (#__save),a
@@ -73,11 +86,12 @@ __asm
     ldh (__current_bank),a
     ld  (#0x2000), a
     ret
-__endasm;  
+__endasm;  */
+	return *ptr;
 }
 
 void ReadBankedBankPtr(UBYTE bank, BankPtr* to, BankPtr* from) __naked {
-  bank; from; to; 
+/*  bank; from; to; 
 __asm
     ldh a, (__current_bank)
     ld  (#__save),a
@@ -98,7 +112,7 @@ __asm
 
     ld  a, (hl+)
     ld  (de), a
-    .rept 2
+g    .rept 2
       inc de
       ld  a, (hl+)
       ld  (de), a
@@ -108,12 +122,13 @@ __asm
     ldh (__current_bank),a
     ld  (#0x2000), a
     ret
-__endasm;  
+__endasm;   */
+	*to = *from;
 }
 
 void MemcpyBanked(UBYTE bank, void* to, void* from, size_t n) {
-  _save = _current_bank;
-  SWITCH_ROM(bank);
+/*  _save = _current_bank;
+  SWITCH_ROM(bank); */
   memcpy(to, from, n);
-  SWITCH_ROM(_save);
+//  SWITCH_ROM(_save);
 }

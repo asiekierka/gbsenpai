@@ -1,16 +1,16 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
-#include <gb/gb.h>
+#include "shim/gb_shim.h"
 
 #include "Math.h"
 
 #define CAMERA_BANK 1
 
-#define SCREEN_WIDTH 160
-#define SCREEN_HEIGHT 144
-#define SCREEN_WIDTH_HALF 80
-#define SCREEN_HEIGHT_HALF 72
+#define SCREEN_WIDTH (SCREENWIDTH)
+#define SCREEN_HEIGHT (SCREENHEIGHT)
+#define SCREEN_WIDTH_HALF (SCREENWIDTH >> 1)
+#define SCREEN_HEIGHT_HALF (SCREENHEIGHT >> 1)
 
 #define CAMERA_LOCK_FLAG 0x10
 #define CAMERA_TRANSITION_FLAG 0x20

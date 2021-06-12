@@ -18,22 +18,25 @@ void MusicPlay(UBYTE index, UBYTE loop, UBYTE return_bank) {
     music_bank = ReadBankedUBYTE(DATA_PTRS_BANK, &music_banks[index]);
 
     PUSH_BANK(DATA_PTRS_BANK);
-    gbt_play((void*)music_tracks[index], music_bank, 7);
-    gbt_loop(loop);
+	// TODO GBSA
+    /* gbt_play((void*)music_tracks[index], music_bank, 7);
+    gbt_loop(loop); */
     POP_BANK;
     SWITCH_ROM(return_bank);
   }
 }
 
 void MusicStop(UBYTE return_bank) {
-  gbt_stop();
+  // TODO GBSA
+  // gbt_stop();
   current_index = MAX_MUSIC;
   SWITCH_ROM(return_bank);
 }
 
 void MusicUpdate() {
   UINT8 _bank = _current_bank;
-  gbt_update();
+  // TODO GBSA
+  // gbt_update();
   SWITCH_ROM(_bank);
 
   if (tone_frames != 0) {
@@ -46,7 +49,8 @@ void MusicUpdate() {
 
 void SoundPlayTone(UWORD tone, UBYTE frames) {
   tone_frames = frames;
-
+  
+#ifdef __GBA__
   // enable sound
   NR52_REG = 0x80;
 
@@ -62,14 +66,18 @@ void SoundPlayTone(UWORD tone, UBYTE frames) {
 
   // enable channel 1
   NR51_REG |= 0x11;
+#endif
 }
 
 void SoundStopTone() {
+#ifdef __GBA__
   // stop tone on channel 1
   NR12_REG = 0x00;
+#endif
 }
 
 void SoundPlayBeep(UBYTE pitch) {
+#ifdef __GBA__
   // enable sound
   NR52_REG = 0x80;
 
@@ -86,9 +94,11 @@ void SoundPlayBeep(UBYTE pitch) {
   NR51_REG |= 0x88;
 
   // no delay
+#endif
 }
 
 void SoundPlayCrash() {
+#ifdef __GBA__
   // enable sound
   NR52_REG = 0x80;
 
@@ -105,4 +115,5 @@ void SoundPlayCrash() {
   NR51_REG |= 0x88;
 
   // no delay
+#endif
 }

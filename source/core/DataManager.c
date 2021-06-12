@@ -65,6 +65,7 @@ void LoadImage(UINT16 index) {
   scroll_x_max = image_width - ((UINT16)SCREENWIDTH);
   image_height = image_tile_height * 8;
   scroll_y_max = image_height - ((UINT16)SCREENHEIGHT);
+  gbsa_update_viewport_size(image_width, image_height);
   image_ptr = data_ptr;
 
   POP_BANK;

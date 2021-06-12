@@ -1,7 +1,7 @@
 #ifndef MUSIC_MANAGER_H
 #define MUSIC_MANAGER_H
 
-#include <gb/gb.h>
+#include "shim/gb_shim.h"
 
 /**
  * Play music

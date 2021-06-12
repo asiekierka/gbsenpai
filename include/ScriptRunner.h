@@ -1,7 +1,7 @@
 #ifndef SCRIPT_RUNNER_H
 #define SCRIPT_RUNNER_H
 
-#include <gb/gb.h>
+#include "shim/gb_shim.h"
 
 #include "BankData.h"
 #include "Math.h"

@@ -113,8 +113,7 @@ void UIUpdate_b() __banked {
     }
   }
 
-  WX_REG = win_pos_x + 7;
-  WY_REG = win_pos_y;
+  gbsa_window_set_pos(win_pos_x + 7, win_pos_y);
 }
 
 void UIDrawFrame_b(UBYTE x, UBYTE y, UBYTE width, UBYTE height) __banked {
@@ -157,7 +156,7 @@ void UIShowText_b() __banked {
       case '$':
         l = GetToken_b(src + 1, '$', &var_index);
         if (l) {
-          dest += strlen(itoa(script_variables[var_index], dest));
+          dest += strlen(itoa(script_variables[var_index], dest, 10));
           src += l + 1; 
           continue;
         }

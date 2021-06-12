@@ -1,9 +1,11 @@
 #ifndef BANK_DATA_H
 #define BANK_DATA_H
 
-#include <gb/gb.h>
+#include "shim/gb_shim.h"
 
-#define BankDataPtr(bank) ((UBYTE *)0x4000)
+// GBSA
+const uint8_t *gbsa_patch_get_bank(UBYTE id);
+#define BankDataPtr(bank) gbsa_patch_get_bank(bank)
 
 typedef struct _BankPtr {
   UBYTE bank;
@@ -57,5 +59,8 @@ void ReadBankedBankPtr(UBYTE bank, BankPtr *to, BankPtr *from);
  * @param n number of bytes to fetch from bank
  */
 void MemcpyBanked(UBYTE bank, void* to, void* from, size_t n);
+
+// GBSA
+extern UBYTE _current_bank;
 
 #endif

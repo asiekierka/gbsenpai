@@ -1,7 +1,7 @@
 #ifndef STATE_PLATFORM_H
 #define STATE_PLATFORM_H
 
-#include <gb/gb.h>
+#include "shim/gb_shim.h"
 
 void Start_Platform();
 void Update_Platform();

@@ -1,7 +1,7 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-#include <gb/gb.h>
+#include "shim/gb_shim.h"
 
 typedef void (*Void_Func_Void)();
 

@@ -1,13 +1,13 @@
 #ifndef SCROLL_H
 #define SCROLL_H
 
-#include <gb/gb.h>
+#include "shim/gb_shim.h"
 
 #include "Math.h"
 
 #define SCROLL_BANK 1
-#define SCREEN_TILES_W 20  // 160 >> 3 = 20
-#define SCREEN_TILES_H 18  // 144 >> 3 = 18
+#define SCREEN_TILES_W (SCREENWIDTH >> 3) // GBSA
+#define SCREEN_TILES_H (SCREENHEIGHT >> 3) // GBSA
 #define SCREEN_PAD_LEFT 1
 #define SCREEN_PAD_RIGHT 2
 #define SCREEN_PAD_TOP 1

@@ -1,7 +1,7 @@
 #ifndef STACK_H
 #define STACK_H
 
-#include <gb/gb.h>
+#include "shim/gb_shim.h"
 
 #define DECLARE_STACK(NAME, MAX_ELEMS) UINT8 NAME[MAX_ELEMS + 1] = {0}
 

@@ -1,7 +1,7 @@
 #ifndef COLLISIONS_H
 #define COLLISIONS_H
 
-#include <gb/gb.h>
+#include "shim/gb_shim.h"
 
 #define COLLISION_TOP 0x1
 #define COLLISION_BOTTOM 0x2

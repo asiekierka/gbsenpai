@@ -1,5 +1,8 @@
 #include "BankManager.h"
 
+// GBSA
+#include "BankData.h"
+
 DECLARE_STACK(bank_stack, N_PUSH_BANKS);
 
 void PushBank(UINT8 b) {

@@ -1,9 +1,7 @@
 #ifndef MATH_H
 #define MATH_H
 
-#include <gb/gb.h>
-
-#include "asm/types.h"
+#include "shim/gb_shim.h"
 
 INT16 DespRight(INT16 a, INT16 b);
 UBYTE Lt16(UINT16 a, UINT16 b);

@@ -10,8 +10,6 @@
 #include "ScriptRunner.h"
 #include "Math.h"
 
-#define SCREENWIDTH_PLUS_64 224   // 160 + 64
-#define SCREENHEIGHT_PLUS_64 208  // 144 + 64
 #define NO_ACTOR_PINNED 255
 
 Projectile projectiles[MAX_PROJECTILES];
