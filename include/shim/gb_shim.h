@@ -77,7 +77,11 @@ void set_win_tiles(int x, int y, int width, int height, const uint8_t *tiles);
 #define J_SELECT	(1 << 6)
 #define J_START		(1 << 7)
 
+#ifdef FEAT_WIDESCREEN
 #define SCREENWIDTH		224
+#else
+#define SCREENWIDTH		160
+#endif
 #define SCREENHEIGHT	144
 #define MINWNDPOSX		7
 #define MINWNDPOSY		0

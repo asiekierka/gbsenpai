@@ -19,7 +19,11 @@ void ApplyPaletteChange_b() __banked {
   palette_dirty = TRUE;
 #endif
 
-  gbsa_fx_fade(fade_style, fade_timer);
+#ifdef FEAT_SMOOTH_FADES
+  gbsa_fx_fade(fade_style, fade_timer, fade_frame & fade_frames_per_step, fade_frames_per_step + 1, fade_direction == FADE_OUT);
+#else
+  gbsa_fx_fade(fade_style, fade_timer, 0, 1, 0);
+#endif
 }
 
 void FadeIn_b() __banked {
@@ -52,8 +56,13 @@ void FadeUpdate_b()  __banked {
           fade_running = FALSE;
         }
       }
+#ifndef FEAT_SMOOTH_FADES
       ApplyPaletteChange_b();
+#endif
 	}
+#ifdef FEAT_SMOOTH_FADES
+    ApplyPaletteChange_b();
+#endif
     fade_frame++;
   }
 }

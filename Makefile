@@ -13,6 +13,10 @@ include $(DEVKITARM)/gba_rules
 # - banks.h and data_ptrs.h from include/
 GAME_DIR	:= sample_cgb
 GAME_CGB	:= true
+ENGINE_FEAT_WIDESCREEN := true
+ENGINE_FEAT_SMOOTH_FADES := true
+ENGINE_FEAT_BORDER := true
+
 #ENGINE_DEBUG	:= true
 
 #---------------------------------------------------------------------------------
@@ -33,7 +37,7 @@ SOURCES		:= $(GAME_DIR) source source/core source/states \
 	source/core_c source/shim
 INCLUDES	:= include $(GAME_DIR) $(BUILD)
 DATA		:=
-MUSIC		:=
+GRAPHICS	:= graphics
 
 #---------------------------------------------------------------------------------
 # options for code generation
@@ -48,8 +52,17 @@ CFLAGS	+=	$(INCLUDE) -D__GBA__
 ifeq ($(GAME_CGB),true)
 	CFLAGS += -DCGB
 endif
-ifeq ($(GAME_DEBUG),true)
+ifeq ($(ENGINE_DEBUG),true)
 	CFLAGS += -DDEBUG
+endif
+ifeq ($(ENGINE_FEAT_WIDESCREEN),true)
+	CFLAGS += -DFEAT_WIDESCREEN
+endif
+ifeq ($(ENGINE_FEAT_SMOOTH_FADES),true)
+	CFLAGS += -DFEAT_SMOOTH_FADES
+endif
+ifeq ($(ENGINE_FEAT_BORDER),true)
+	CFLAGS += -DFEAT_BORDER
 endif
 
 CXXFLAGS	:=	$(CFLAGS) -fno-rtti -fno-exceptions
@@ -89,6 +102,7 @@ export DEPSDIR	:=	$(CURDIR)/$(BUILD)
 CFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
 CPPFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
 SFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
+PNGFILES := $(foreach dir,$(GRAPHICS),$(notdir $(wildcard $(dir)/*.png)))
 BINFILES	:=	$(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.*)))
 
 ifneq ($(strip $(MUSIC)),)
@@ -110,7 +124,7 @@ else
 endif
 #---------------------------------------------------------------------------------
 
-export OFILES_BIN := $(addsuffix .o,$(BINFILES))
+export OFILES_BIN := $(addsuffix .o,$(BINFILES)) $(PNGFILES:.png=.o)
 
 export OFILES_SOURCES := $(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
 
@@ -148,7 +162,7 @@ $(OUTPUT).gba	:	$(OUTPUT).elf
 
 $(OUTPUT).elf	:	$(OFILES)
 
-$(OFILES_SOURCES) : $(HFILES) banks_gbsa.h
+$(OFILES_SOURCES) : $(HFILES) inject_get_bank.h
 
 #---------------------------------------------------------------------------------
 # The bin2o rule should be copied and modified
@@ -162,9 +176,9 @@ soundbank.bin soundbank.h : $(AUDIOFILES)
 #---------------------------------------------------------------------------------
 	@mmutil $^ -osoundbank.bin -hsoundbank.h
 
-banks_gbsa.h: banks.h ../tools/banks_transform.py
-	@echo $(notdir $<)
-	@python3 ../tools/banks_transform.py ../$(GAME_DIR)/banks.h > $@
+inject_get_bank.h: banks.h ../tools/bank_transformer.py
+	@echo converting bank data...
+	@python3 ../tools/bank_transformer.py ../$(GAME_DIR) ../build_$(GAME_DIR)
 
 #---------------------------------------------------------------------------------
 # This rule links in binary data with the .bin extension
@@ -174,8 +188,18 @@ banks_gbsa.h: banks.h ../tools/banks_transform.py
 	@echo $(notdir $<)
 	@$(bin2o)
 
+#---------------------------------------------------------------------------------
+# This rule creates assembly source files using grit
+# grit takes an image file and a .grit describing how the file is to be processed
+# add additional rules like this for each image extension
+# you use in the graphics folders
+#---------------------------------------------------------------------------------
+%.s %.h: %.png %.grit
+#---------------------------------------------------------------------------------
+	grit $< -fts -o$*
 
 -include $(DEPSDIR)/*.d
 #---------------------------------------------------------------------------------------
 endif
 #---------------------------------------------------------------------------------------
+

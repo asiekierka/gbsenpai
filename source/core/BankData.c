@@ -10,10 +10,11 @@ static UBYTE _save;
 
 // GBSA
 #include "banks.h"
+#include "inject_music_banks.h"
 UBYTE _current_bank;
 
 const uint8_t *gbsa_patch_get_bank(UBYTE id) {
-#include "banks_gbsa.h"
+#include "inject_get_bank.h"
 	debug_printf(LOG_ERROR, "Invalid get_bank call (%d)", id);
 	return NULL;
 }

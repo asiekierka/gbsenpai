@@ -58,8 +58,7 @@ void vbl_update() {
   if (music_mute_frames != 0) {
     music_mute_frames--;
     if (music_mute_frames == 0) {
-      // TODO GBSA
-      // gbt_enable_channels(0xF);
+      gbt_enable_channels(0xF);
     }
   }
 

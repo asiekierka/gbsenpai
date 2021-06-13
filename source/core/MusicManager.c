@@ -18,25 +18,22 @@ void MusicPlay(UBYTE index, UBYTE loop, UBYTE return_bank) {
     music_bank = ReadBankedUBYTE(DATA_PTRS_BANK, &music_banks[index]);
 
     PUSH_BANK(DATA_PTRS_BANK);
-	// TODO GBSA
-    /* gbt_play((void*)music_tracks[index], music_bank, 7);
-    gbt_loop(loop); */
+    gbt_play(music_tracks[index], music_bank, 7);
+    gbt_loop(loop);
     POP_BANK;
     SWITCH_ROM(return_bank);
   }
 }
 
 void MusicStop(UBYTE return_bank) {
-  // TODO GBSA
-  // gbt_stop();
+  gbt_stop();
   current_index = MAX_MUSIC;
   SWITCH_ROM(return_bank);
 }
 
 void MusicUpdate() {
   UINT8 _bank = _current_bank;
-  // TODO GBSA
-  // gbt_update();
+  gbt_update();
   SWITCH_ROM(_bank);
 
   if (tone_frames != 0) {
