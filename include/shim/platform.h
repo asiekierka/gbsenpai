@@ -25,7 +25,7 @@ void gbsa_palette_set_sprite_dmg(uint8_t idx, uint8_t v);
 
 void gbsa_fx_fade(uint8_t to_black, uint8_t level /* 5 - 0; 5 - least, 0 - most */, uint8_t frame, uint8_t frame_ctr, uint8_t going_down);
 
-void gbsa_tile_set_data(uint8_t bg_id, uint8_t id, const uint8_t *data);
+void gbsa_tile_set_data(uint8_t id, const uint8_t *data);
 void gbsa_map_set_bg_tile(uint8_t bg_id, uint8_t x, uint8_t y, uint16_t id);
 void gbsa_map_set_bg_attr(uint8_t bg_id, uint8_t x, uint8_t y, uint16_t id);
 void gbsa_map_set_bg_scroll(uint8_t x, uint8_t y);

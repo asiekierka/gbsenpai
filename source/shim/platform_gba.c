@@ -12,6 +12,7 @@
 #endif
 
 // #define LAYER_PRIORITY_EMULATION
+// #define GBA_COLOR_CORRECTION
 
 // GBSA logic
 
@@ -130,6 +131,7 @@ void gbsa_exit(void) {
 }
 
 static inline uint16_t gbsa_gbc_to_gba_color(uint16_t v) {
+#ifdef GBA_COLOR_CORRECTION
     uint16_t r = (v & 0x1F);
     uint16_t g = ((v >> 5) & 0x1F);
     uint16_t b = ((v >> 10) & 0x1F);
@@ -139,6 +141,9 @@ static inline uint16_t gbsa_gbc_to_gba_color(uint16_t v) {
     b = ((b * 3) >> 2) + 8;
 
     return ((b << 10) | (g << 5) | r);
+#else
+    return v;
+#endif
 }
 
 void gbsa_palette_set_bkg(int idx, const uint16_t *data) {
@@ -147,6 +152,9 @@ void gbsa_palette_set_bkg(int idx, const uint16_t *data) {
     pal_bg_mem[(idx << 4) | 1] = gbsa_gbc_to_gba_color(data[1]);
     pal_bg_mem[(idx << 4) | 2] = gbsa_gbc_to_gba_color(data[2]);
     pal_bg_mem[(idx << 4) | 3] = gbsa_gbc_to_gba_color(data[3]);
+
+    // For windows
+    memcpy32(pal_bg_mem + (idx << 4) + 8, pal_bg_mem + (idx << 4), 2);
 #endif
 }
 
@@ -165,6 +173,9 @@ void gbsa_palette_set_bkg_dmg(uint8_t v) {
     pal_bg_mem[1] = dmg_palette[(v >> 2) & 0x03];
     pal_bg_mem[2] = dmg_palette[(v >> 4) & 0x03];
     pal_bg_mem[3] = dmg_palette[(v >> 6) & 0x03];
+
+    // For windows
+    memcpy32(pal_bg_mem + 8, pal_bg_mem, 2);
 #endif
 }
 
@@ -305,14 +316,16 @@ void gbsa_map_set_bg_scroll(uint8_t x, uint8_t y) {
     REG_BG0VOFS = y - bg_y_offset;
 }
 
-void gbsa_tile_set_data(uint8_t bg_id, uint8_t id, const uint8_t *data) {
-    int long_id = (bg_id << 8) | id;
+void gbsa_tile_set_data(uint8_t id, const uint8_t *data) {
+    int long_id = id;
     u32 *ptr = (u32*) (MEM_VRAM + (long_id << 5));
+    u32 *wptr = (u32*) (MEM_VRAM + (long_id << 5) + (1 << 13));
 
-    for (int i = 0; i < 8; i++, ptr++, data += 2) {
+    for (int i = 0; i < 8; i++, ptr++, wptr++, data += 2) {
         uint32_t ones = lut_expand_8_32[data[0]];
         uint32_t twos = lut_expand_8_32[data[1]] << 1;
-        *ptr = ones | twos;
+		*ptr = ones | twos;
+		*wptr = (ones | twos) + 0x88888888;
     }	
 }
 
@@ -324,7 +337,7 @@ void gbsa_map_set_bg_tile(uint8_t bg_id, uint8_t x, uint8_t y, uint16_t id) {
 #endif
 
     u16* ptr = (u16*) (MEM_VRAM + 0x8000 + curr_layer_offset + (bg_id << 11) + (y << 6) + (x << 1));
-    *ptr = ((*ptr) & 0xFC00) | (id & 0x00FF);
+    *ptr = ((*ptr) & 0xFC00) | (id & 0x00FF) | (bg_id ? 0x100 : 0);
 }
 
 void gbsa_map_set_bg_attr(uint8_t bg_id, uint8_t x, uint8_t y, uint16_t id) {

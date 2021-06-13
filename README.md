@@ -1,6 +1,10 @@
 # gbsenpai
 
-**gbsenpai** - GameBoy Studio Extended Nominal Player Adaptation/Interface - is a project to port the GB Studio player to additional, non-GB/GBC platforms, with support for potential enhancements.
+**gbsenpai** - GB Studio Extended Nominal Player Adaptation/Interface - is a project to port the GB Studio player to additional, non-GB/GBC platforms, with support for potential enhancements.
+
+![GB Studio v2 color sample running within gbsenpai.](https://img.asie.pl/atKY.png)
+
+[Proof of concept video](https://img.asie.pl/adKi.mp4)
 
 ## Compatibility
 

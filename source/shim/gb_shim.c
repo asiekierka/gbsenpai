@@ -19,7 +19,7 @@ uint8_t VBK_REG = 0;
 
 void set_bkg_data(int first, int count, const uint8_t *data) {
 	for (int i = 0; i < count; i++, data += 16) {
-		gbsa_tile_set_data(BG_ID_BG, i + first, data);
+		gbsa_tile_set_data(i + first, data);
 	}
 }
 
@@ -42,17 +42,33 @@ void set_sprite_prop(int id, int props) {
 }
 
 void fill_win_rect(int x, int y, int width, int height, int id) {
-	for (int iy = 0; iy < height; iy++) {
-		for (int ix = 0; ix < width; ix++) {
-			gbsa_map_set_bg_tile(BG_ID_WINDOW, ix + x, iy + y, id);
+	if (VBK_REG) {
+		for (int iy = 0; iy < height; iy++) {
+			for (int ix = 0; ix < width; ix++) {
+				gbsa_map_set_bg_attr(BG_ID_WINDOW, ix + x, iy + y, id);
+			}
+		}
+	} else {
+		for (int iy = 0; iy < height; iy++) {
+			for (int ix = 0; ix < width; ix++) {
+				gbsa_map_set_bg_tile(BG_ID_WINDOW, ix + x, iy + y, id);
+			}
 		}
 	}
 }
 
 void set_win_tiles(int x, int y, int width, int height, const uint8_t *tiles) {
-	for (int iy = 0; iy < height; iy++) {
-		for (int ix = 0; ix < width; ix++) {
-			gbsa_map_set_bg_tile(BG_ID_WINDOW, ix + x, iy + y, *(tiles++));
+	if (VBK_REG) {
+		for (int iy = 0; iy < height; iy++) {
+			for (int ix = 0; ix < width; ix++) {
+				gbsa_map_set_bg_attr(BG_ID_WINDOW, ix + x, iy + y, *(tiles++));
+			}
+		}
+	} else {
+		for (int iy = 0; iy < height; iy++) {
+			for (int ix = 0; ix < width; ix++) {
+				gbsa_map_set_bg_tile(BG_ID_WINDOW, ix + x, iy + y, *(tiles++));
+			}
 		}
 	}
 }
