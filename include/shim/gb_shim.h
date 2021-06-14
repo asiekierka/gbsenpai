@@ -60,8 +60,8 @@ void set_win_tiles(int x, int y, int width, int height, const uint8_t *tiles);
 #define CGB_TYPE 1
 
 #define SWITCH_ROM_MBC1
-#define ENABLE_RAM_MBC5
-#define DISABLE_RAM_MBC5
+#define ENABLE_RAM_MBC5 gbsa_sram_enable()
+#define DISABLE_RAM_MBC5 gbsa_sram_disable()
 
 // Constants.
 

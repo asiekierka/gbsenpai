@@ -1278,7 +1278,7 @@ void Script_SaveData_b() {
 
   ENABLE_RAM;
 
-  RAMPtr = (UBYTE*)RAM_START_PTR;
+  RAMPtr = gbsa_sram_get_ptr(RAM_START_PTR);
   RAMPtr[0] = TRUE;  // Flag to determine if data has been stored
 
   RAMPtr[1] = current_state >> 8;
@@ -1302,7 +1302,7 @@ void Script_SaveData_b() {
   RAMPtr[7] = map_next_sprite & 0xFF;
 
   // Save variable values
-  RAMPtr = (UBYTE*)RAM_START_VARS_PTR;
+  RAMPtr = gbsa_sram_get_ptr(RAM_START_VARS_PTR);
   for (i = 0; i < NUM_VARIABLES; i++) {
     RAMPtr[i] = script_variables[i];
   }
@@ -1321,7 +1321,7 @@ void Script_LoadData_b() {
 
   ENABLE_RAM;
 
-  RAMPtr = (UBYTE*)RAM_START_PTR;
+  RAMPtr = gbsa_sram_get_ptr(RAM_START_PTR);
   if (*RAMPtr == TRUE) {
     // Set scene index
     RAMPtr++;
@@ -1365,7 +1365,7 @@ void Script_LoadData_b() {
  */
 void Script_ClearData_b() {
   ENABLE_RAM;
-  RAMPtr = (UBYTE*)RAM_START_PTR;
+  RAMPtr = gbsa_sram_get_ptr(RAM_START_PTR);
   RAMPtr[0] = FALSE;
   DISABLE_RAM;
 }
@@ -1382,7 +1382,7 @@ void Script_IfSavedData_b() {
   UBYTE jump;
 
   ENABLE_RAM;
-  RAMPtr = (UBYTE*)RAM_START_PTR;
+  RAMPtr = gbsa_sram_get_ptr(RAM_START_PTR);
   jump = 0;
   jump = *RAMPtr == TRUE;
   DISABLE_RAM;

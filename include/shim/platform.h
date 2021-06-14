@@ -39,6 +39,10 @@ void gbsa_sprite_set_data(uint8_t id, const uint8_t *data);
 void gbsa_sprite_set_tile(int id, uint16_t idx);
 void gbsa_sprite_set_props(int id, uint16_t props);
 
+void gbsa_sram_enable(void);
+void gbsa_sram_disable(void);
+uint8_t *gbsa_sram_get_ptr(uint32_t offset);
+
 // GBA sound hack
 
 #ifdef __GBA__

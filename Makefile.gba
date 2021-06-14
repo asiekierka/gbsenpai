@@ -25,7 +25,11 @@ ENGINE_FEAT_SMOOTH_FADES := true
 # !!! Unless you know what you're doing, do not edit anything below this line! !!!
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-#ENGINE_DEBUG	:= true
+# Compile as a multiboot .GBA file.
+#ENGINE_MULTIBOOT := true
+
+# Enable mGBA debugging information.
+#ENGINE_DEBUG := true
 
 #---------------------------------------------------------------------------------
 # TARGET is the name of the output
@@ -40,7 +44,10 @@ ENGINE_FEAT_SMOOTH_FADES := true
 #
 #---------------------------------------------------------------------------------
 TARGET		:= $(GAME_DIR)
-BUILD		:= build_$(GAME_DIR)
+ifeq ($(ENGINE_MULTIBOOT),true)
+TARGET		:= $(GAME_DIR)_mb
+endif
+BUILD		:= build_$(TARGET)
 SOURCES		:= $(GAME_DIR) source source/core source/states \
 	source/core_c source/shim
 INCLUDES	:= include $(GAME_DIR) $(BUILD)
@@ -186,7 +193,7 @@ soundbank.bin soundbank.h : $(AUDIOFILES)
 
 inject_get_bank.h: banks.h ../tools/bank_transformer.py
 	@echo converting bank data...
-	@python3 ../tools/bank_transformer.py ../$(GAME_DIR) ../build_$(GAME_DIR)
+	@python3 ../tools/bank_transformer.py ../$(GAME_DIR) ../build_$(TARGET)
 
 #---------------------------------------------------------------------------------
 # This rule links in binary data with the .bin extension

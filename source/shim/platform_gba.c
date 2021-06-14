@@ -365,3 +365,17 @@ void gbsa_map_set_bg_attr(uint8_t bg_id, uint8_t x, uint8_t y, uint16_t id) {
 	}
 #endif
 }
+
+void gbsa_sram_enable(void) {
+	// no-op
+}
+
+void gbsa_sram_disable(void) {
+	// no-op
+}
+
+const char sram_save_type[] = "SRAM_Vnnn\0\0\0";
+
+uint8_t *gbsa_sram_get_ptr(uint32_t offset) { 
+	return sram_mem + ((offset - 0xA000) & (SRAM_SIZE - 1));
+}
