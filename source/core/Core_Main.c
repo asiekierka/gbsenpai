@@ -22,6 +22,7 @@
 #include "data_ptrs.h"
 #include "main.h"
 #include "shim/platform.h"
+#include "tonc_memmap.h"
 
 UBYTE game_time = 0;
 UBYTE seedRand = 2;
@@ -191,13 +192,13 @@ int core_start() {
         // Seed on first button press
         if (joy) {
           seedRand--;
-          // srand((DIV_REG*256)+game_time);
+          srand(((REG_TM1CNT_L << 8) & 0x1FF00)+game_time);
         }
       } else {
         // Seed on first button release
           if (!joy) {
           seedRand = FALSE;
-          // srand((DIV_REG*256)+game_time);
+          srand(rand()+((REG_TM1CNT_L << 8) & 0x1FF00)+game_time);
         }
       }
     }
