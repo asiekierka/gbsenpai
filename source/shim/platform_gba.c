@@ -17,7 +17,7 @@
 // GBSA logic
 
 static uint16_t bg_x_offset, bg_y_offset, viewport_width, viewport_height;
-static uint8_t win_x_pos = 0, win_y_pos = MAXWNDPOSY + 1;
+static int win_x_pos = 0, win_y_pos = MAXWNDPOSY + 1;
 static uint32_t lut_expand_8_32[256] = {
 #include "lut_expand_8_32.inc"
 };
@@ -36,13 +36,18 @@ static uint32_t cgb_layer[32] = { 0 };
 /**
  * VRAM layout: 
  * 00000 - 07FFF: tile area
- * 08000 - 087FF: bgmap 0 (background tiles)
- * 08800 - 08FFF: bgmap 1 (window tiles)
- * 09000 - 097FF: bgmap 2 (foreground tiles)
- * 09800 - 09FFF: bgmap 3 (border)
+ * 08000 - 08FFF: bgmap 0 (background tiles)
+ * 09000 - 09FFF: bgmap 2 (foreground tiles)
+ * 0A000 - 0A7FF: bgmap 1 (window tiles)
+ * 0A800 - 0AFFF: bgmap 3 (border)
  *
  * tile 0x303, color 15 = blank area
  */
+#ifdef FEAT_WIDESCREEN_240
+#define EMU_BGMAP_SIZE BG_SIZE1
+#else
+#define EMU_BGMAP_SIZE BG_SIZE0
+#endif
 
 void gbsa_init(void) {
     REG_DISPCNT = DCNT_BLANK;
@@ -50,22 +55,21 @@ void gbsa_init(void) {
     irq_init(isr_master);
 
     // clear VRAM
-	for (int i = 0; i < (0x800 >> 2); i++) {
-		*((uint32_t*) (MEM_VRAM + 0x8000 + (i * 4))) = 0x03FF03FF;
-		*((uint32_t*) (MEM_VRAM + 0x8800 + (i * 4))) = 0x03FF03FF;
-		*((uint32_t*) (MEM_VRAM + 0x9000 + (i * 4))) = 0x03FE03FE;
-#ifndef FEAT_BORDER
-		*((uint32_t*) (MEM_VRAM + 0x9800 + (i * 4))) = 0x03FF03FF;
+    for (int i = 0; i < (0x1000 >> 2); i++) {
+        *((uint32_t*) (MEM_VRAM + 0x8000 + (i * 4))) = 0x03FF03FF;
+        *((uint32_t*) (MEM_VRAM + 0x9000 + (i * 4))) = 0x03FE03FE;
+#if defined(LAYER_PRIORITY_EMULATION) || !defined(FEAT_BORDER)
+        *((uint32_t*) (MEM_VRAM + 0xA000 + (i * 4))) = 0x03FF03FF;
 #endif
-	}
-	for (int i = 0; i < 8; i++) {
-		*((uint32_t*) (MEM_VRAM + (0x3FE * 32) + (i * 4))) = 0x00000000;
-		*((uint32_t*) (MEM_VRAM + (0x3FF * 32) + (i * 4))) = 0xFFFFFFFF;
-	}
+    }
+    for (int i = 0; i < 8; i++) {
+        *((uint32_t*) (MEM_VRAM + (0x3FE * 32) + (i * 4))) = 0x00000000;
+        *((uint32_t*) (MEM_VRAM + (0x3FF * 32) + (i * 4))) = 0xFFFFFFFF;
+    }
     OAM_CLEAR();
     for (int i = 0; i < 128; i++) {
         obj_mem[i].attr0 = 0x8200;
-		obj_mem[i].attr2 = 0x0C00;
+        obj_mem[i].attr2 = 0x0C00;
         pal_bg_mem[i] = 0;
         pal_bg_mem[i | 128] = 0;
         pal_obj_mem[i] = 0;
@@ -73,57 +77,57 @@ void gbsa_init(void) {
     }
 
 #ifdef FEAT_BORDER
-	memcpy32((uint32_t*) (MEM_VRAM + 0x0C000), borderTiles, borderTilesLen >> 2);
-	memcpy32((uint32_t*) (MEM_VRAM + 0x09800), borderMap, 0x800 >> 2);
-	memcpy32((uint32_t*) (pal_bg_mem + 240), borderPal, borderPalLen >> 2);
-    REG_BG3CNT = BG_PRIO(0) | BG_CBB(3) | BG_SBB(19) | BG_4BPP | BG_SIZE0;
+    memcpy32((uint32_t*) (MEM_VRAM + 0x0C000), borderTiles, borderTilesLen >> 2);
+    memcpy32((uint32_t*) (MEM_VRAM + 0x0A800), borderMap, 0x800 >> 2);
+    memcpy32((uint32_t*) (pal_bg_mem + 240), borderPal, borderPalLen >> 2);
+    REG_BG3CNT = BG_PRIO(0) | BG_CBB(3) | BG_SBB(21) | BG_4BPP | BG_SIZE0;
 #else
-    REG_BG3CNT = BG_PRIO(0) | BG_CBB(0) | BG_SBB(19) | BG_4BPP | BG_SIZE0;
+    REG_BG3CNT = BG_PRIO(0) | BG_CBB(0) | BG_SBB(21) | BG_4BPP | BG_SIZE0;
 #endif
 
 #ifdef DEBUG
     REG_DEBUG_ENABLE = 0xC0DE;
-	debug_printf(LOG_WARN, "Debugging enabled.");
+    debug_printf(LOG_WARN, "Debugging enabled.");
 #endif
 
-	gbsa_update_viewport_size(SCREENWIDTH, SCREENHEIGHT);
+    gbsa_update_viewport_size(SCREENWIDTH, SCREENHEIGHT);
 
     REG_WININ = WIN_BUILD((WIN_BG1 | WIN_BLD), (WIN_BG0 | WIN_OBJ | WIN_BG2 | WIN_BLD));
     REG_WINOUT = WIN_BUILD((WIN_BG3), (0));
 
-	REG_SOUNDCNT_H = SDS_DMG100;
-	REG_SOUNDBIAS = 0xC200; // 262.144kHz, optimal for DMG
+    REG_SOUNDCNT_H = SDS_DMG100;
+    REG_SOUNDBIAS = 0xC200; // 262.144kHz, optimal for DMG
 
-    REG_BG0CNT = BG_PRIO(3) | BG_CBB(0) | BG_SBB(16) | BG_4BPP | BG_SIZE0;
-    REG_BG1CNT = BG_PRIO(2) | BG_CBB(0) | BG_SBB(17) | BG_4BPP | BG_SIZE0;
-    REG_BG2CNT = BG_PRIO(1) | BG_CBB(0) | BG_SBB(18) | BG_4BPP | BG_SIZE0;
+    REG_BG0CNT = BG_PRIO(3) | BG_CBB(0) | BG_SBB(16) | BG_4BPP | EMU_BGMAP_SIZE;
+    REG_BG1CNT = BG_PRIO(2) | BG_CBB(0) | BG_SBB(20) | BG_4BPP | BG_SIZE0;
+    REG_BG2CNT = BG_PRIO(1) | BG_CBB(0) | BG_SBB(18) | BG_4BPP | EMU_BGMAP_SIZE;
     REG_DISPCNT = DCNT_MODE0 | DCNT_BG0 | DCNT_BG1 | DCNT_BG3 | DCNT_OBJ_1D | DCNT_WIN1;
 #ifdef LAYER_PRIORITY_EMULATION
-	REG_DISPCNT |= DCNT_BG2;
+    REG_DISPCNT |= DCNT_BG2;
 #endif
 }
 
 void gbsa_update_viewport_size(int width, int height) {
-	int hofs = REG_BG0HOFS + bg_x_offset;
-	int vofs = REG_BG0VOFS + bg_y_offset;
+    int hofs = REG_BG0HOFS + bg_x_offset;
+    int vofs = REG_BG0VOFS + bg_y_offset;
 
-	if (width > SCREENWIDTH) width = SCREENWIDTH;
-	if (height > SCREENHEIGHT) height = SCREENHEIGHT;
+    if (width > SCREENWIDTH) width = SCREENWIDTH;
+    if (height > SCREENHEIGHT) height = SCREENHEIGHT;
 
     bg_x_offset = (240 - width) >> 1;
     bg_y_offset = (160 - height) >> 1;
-	viewport_width = width;
-	viewport_height = height;
+    viewport_width = width;
+    viewport_height = height;
 
     REG_WIN1L = bg_x_offset;
     REG_WIN1R = bg_x_offset + width;
     REG_WIN1T = bg_y_offset;
     REG_WIN1B = bg_y_offset + height;
 
-	REG_BG0HOFS = hofs - bg_x_offset;
-	REG_BG0VOFS = vofs - bg_y_offset;
+    REG_BG0HOFS = hofs - bg_x_offset;
+    REG_BG0VOFS = vofs - bg_y_offset;
 
-	gbsa_window_set_pos(win_x_pos, win_y_pos);
+    gbsa_window_set_pos(win_x_pos, win_y_pos);
 }
 
 void gbsa_exit(void) {
@@ -190,19 +194,19 @@ void gbsa_palette_set_sprite_dmg(uint8_t idx, uint8_t v) {
 #endif
 }
 
-void gbsa_window_set_pos(uint8_t x, uint8_t y) {
-	win_x_pos = x;
-	win_y_pos = y;
+void gbsa_window_set_pos(int x, int y) {
+    win_x_pos = x;
+    win_y_pos = y;
     if (y > MAXWNDPOSY) {
         REG_DISPCNT &= ~DCNT_WIN0;
     } else {
-        int win_x_offset = bg_x_offset + ((viewport_width - 160) >> 1);
-        int win_y_offset = bg_y_offset + (viewport_height - 144);
+        int win_x_offset = bg_x_offset + ((viewport_width - WINDOWWIDTH) >> 1);
+        int win_y_offset = bg_y_offset + (viewport_height - WINDOWHEIGHT);
 
         REG_WIN0L = win_x_offset + x - 7;
-        REG_WIN0R = win_x_offset + 160;
+        REG_WIN0R = win_x_offset + WINDOWWIDTH;
         REG_WIN0T = win_y_offset + y;
-        REG_WIN0B = win_y_offset + 144;
+        REG_WIN0B = win_y_offset + WINDOWHEIGHT;
 
         REG_BG1HOFS = -(x - 7 + win_x_offset);
         REG_BG1VOFS = -(y + win_y_offset);
@@ -215,12 +219,12 @@ static const uint8_t fade_levels[6] = {16, 12, 9, 6, 3, 0};
 
 void gbsa_fx_fade(uint8_t to_white, uint8_t level /* 5 - 0; 5 - least, 0 - most */, uint8_t frame, uint8_t frame_ctr, uint8_t going_down) {
 #ifdef FEAT_SMOOTH_FADES
-	int max_level = 4 * frame_ctr;
-	int curr_level = going_down ? (level * frame_ctr - frame) : ((level - 1) * frame_ctr + frame);
-	if (curr_level < 0) curr_level = 0;
-	else if (curr_level > max_level) curr_level = max_level;
-	REG_BLDY = 16 - ((curr_level << 4) / max_level);
-	debug_printf(LOG_DEBUG, "smoothfade: new level %d/%d (%d; %d, %d/%d, %d)", curr_level, max_level, REG_BLDY, level, frame, frame_ctr, going_down);
+    int max_level = 4 * frame_ctr;
+    int curr_level = going_down ? (level * frame_ctr - frame) : ((level - 1) * frame_ctr + frame);
+    if (curr_level < 0) curr_level = 0;
+    else if (curr_level > max_level) curr_level = max_level;
+    REG_BLDY = 16 - ((curr_level << 4) / max_level);
+    debug_printf(LOG_DEBUG, "smoothfade: new level %d/%d (%d; %d, %d/%d, %d)", curr_level, max_level, REG_BLDY, level, frame, frame_ctr, going_down);
 #else
     REG_BLDY = fade_levels[level > 5 ? 5 : level];
 #endif
@@ -297,10 +301,10 @@ void gbsa_intr_add_handler(uint8_t intr_id, int_handler handler) {
     if (intr_id == VBL_IFLAG) {
         irq_add(II_VBLANK, handler);
     } else if (intr_id == TIM_IFLAG) {
-		irq_add(II_TIMER1, handler);
-		REG_TM1CNT_L = 65536 - 272;
-		REG_TM1CNT_H = TM_FREQ_1024 | TM_IRQ | TM_ENABLE;
-	}
+        irq_add(II_TIMER1, handler);
+        REG_TM1CNT_L = 65536 - 272;
+        REG_TM1CNT_H = TM_FREQ_1024 | TM_IRQ | TM_ENABLE;
+    }
 }
 
 void gbsa_intr_set_mask(uint8_t mask) {
@@ -311,7 +315,7 @@ void gbsa_intr_set_enabled(uint8_t value) {
     // TODO
 }
 
-void gbsa_map_set_bg_scroll(uint8_t x, uint8_t y) {
+void gbsa_map_set_bg_scroll(int x, int y) {
     REG_BG0HOFS = x - bg_x_offset;
     REG_BG0VOFS = y - bg_y_offset;
 }
@@ -324,58 +328,69 @@ void gbsa_tile_set_data(uint8_t id, const uint8_t *data) {
     for (int i = 0; i < 8; i++, ptr++, wptr++, data += 2) {
         uint32_t ones = lut_expand_8_32[data[0]];
         uint32_t twos = lut_expand_8_32[data[1]] << 1;
-		*ptr = ones | twos;
-		*wptr = (ones | twos) + 0x88888888;
+        *ptr = ones | twos;
+        *wptr = (ones | twos) + 0x88888888;
     }	
 }
 
 void gbsa_map_set_bg_tile(uint8_t bg_id, uint8_t x, uint8_t y, uint16_t id) {
 #ifdef LAYER_PRIORITY_EMULATION
-	uint32_t curr_layer_offset = ((cgb_layer[y] >> x) & 0x1) << 12;
+    uint32_t curr_layer_offset = ((cgb_layer[y] >> x) & 0x1) << 12;
 #else
-	uint32_t curr_layer_offset = 0;
+    uint32_t curr_layer_offset = 0;
 #endif
 
-    u16* ptr = (u16*) (MEM_VRAM + 0x8000 + curr_layer_offset + (bg_id << 11) + (y << 6) + (x << 1));
+    u16 *ptr;
+    if (bg_id) {
+        ptr = (u16*) (MEM_VRAM + 0xA000 + curr_layer_offset + (y << 6) + (x << 1));
+    } else {
+        ptr = (u16*) (MEM_VRAM + 0x8000 + curr_layer_offset + (y << 6) + ((x & 0x1F) << 1) + ((x & 0x20) << 6));
+    }
     *ptr = ((*ptr) & 0xFC00) | (id & 0x00FF) | (bg_id ? 0x100 : 0);
 }
 
 void gbsa_map_set_bg_attr(uint8_t bg_id, uint8_t x, uint8_t y, uint16_t id) {
 #ifdef LAYER_PRIORITY_EMULATION
-	uint32_t curr_layer_offset = ((cgb_layer[y] >> x) & 0x1) << 12;
-	uint32_t new_layer_offset = (id & 0x80) ? 0x1000 : 0;
+    uint32_t curr_layer_offset = ((cgb_layer[y] >> x) & 0x1) << 12;
+    uint32_t new_layer_offset = (id & 0x80) ? 0x1000 : 0;
 #else
-	uint32_t curr_layer_offset = 0;
-	uint32_t new_layer_offset = 0;
+    uint32_t curr_layer_offset = 0;
+    uint32_t new_layer_offset = 0;
 #endif
 
-    u16* ptr = (u16*) (MEM_VRAM + 0x8000 + curr_layer_offset + (bg_id << 11) + (y << 6) + (x << 1));
-    u16* dst_ptr = (u16*) (MEM_VRAM + 0x8000 + new_layer_offset + (bg_id << 11) + (y << 6) + (x << 1));
+    u16 *ptr, *dst_ptr;
+    if (bg_id) {
+        ptr = (u16*) (MEM_VRAM + 0xA000 + curr_layer_offset + (y << 6) + (x << 1));
+        dst_ptr = (u16*) (MEM_VRAM + 0xA000 + new_layer_offset + (y << 6) + (x << 1));
+    } else {
+        ptr = (u16*) (MEM_VRAM + 0x8000 + curr_layer_offset + (y << 6) + ((x & 0x1F) << 1) + ((x & 0x20) << 6));
+        dst_ptr = (u16*) (MEM_VRAM + 0x8000 + new_layer_offset + (y << 6) + ((x & 0x1F) << 1) + ((x & 0x20) << 6));
+    }
 
-	// write to dst layer
+    // write to dst layer
     *dst_ptr = ((*ptr) & 0x03FF) | ((id & 0x07) << 12) | ((id & S_FLIPX) ? 0x0400 : 0) | ((id & S_FLIPY) ? 0x0800 : 0);
 #ifdef LAYER_PRIORITY_EMULATION
-	if (new_layer_offset) {
-		cgb_layer[y] |= (1 << x);
-	} else {
-		cgb_layer[y] &= ~(1 << x);
-		if (curr_layer_offset) {
-			*ptr = 0x3FE;
-		}
-	}
+    if (new_layer_offset) {
+        cgb_layer[y] |= (1 << x);
+    } else {
+        cgb_layer[y] &= ~(1 << x);
+        if (curr_layer_offset) {
+            *ptr = 0x3FE;
+        }
+    }
 #endif
 }
 
 void gbsa_sram_enable(void) {
-	// no-op
+    // no-op
 }
 
 void gbsa_sram_disable(void) {
-	// no-op
+    // no-op
 }
 
 const char sram_save_type[] = "SRAM_Vnnn\0\0\0";
 
 uint8_t *gbsa_sram_get_ptr(uint32_t offset) { 
-	return sram_mem + ((offset - 0xA000) & (SRAM_SIZE - 1));
+    return sram_mem + ((offset - 0xA000) & (SRAM_SIZE - 1));
 }

@@ -32,6 +32,12 @@ INT16 pending_w_x, pending_w_y;
 UINT8 pending_w_i;
 Pos* scroll_target = 0;
 
+#ifdef FEAT_FAST_LOADS
+#define MAX_ROWS 255
+#else
+#define MAX_ROWS 5
+#endif
+
 void ScrollUpdateRow(INT16 x, INT16 y);
 void RefreshScroll_b() __banked;
 
@@ -41,33 +47,21 @@ void ScrollUpdateRowR() {
   UINT16 id;
   UBYTE y_offset;
 
-  y_offset = MOD_32(pending_w_y);
+  y_offset = SCREENMAPHEIGHTCLIP(pending_w_y);
 
   PUSH_BANK(image_bank);
 
 #ifdef CGB
   if (_cpu == CGB_TYPE) {  // Color Row Load
-    for (i = 0u; i != 5 && pending_w_i != 0; ++i, --pending_w_i) {
-      id = 0x9800 + MOD_32(pending_w_x++) + ((UINT16)y_offset << 5);
-      PUSH_BANK(image_attr_bank);
-      VBK_REG = 1;
-      // set_bkg_tiles(MOD_32(pending_w_x), y_offset, 1, 1, pending_w_cmap++);
-      SetTile(id, *pending_w_cmap);
-      VBK_REG = 0;
-      POP_BANK;
-      // set_bkg_tiles(MOD_32(pending_w_x++), y_offset, 1, 1, pending_w_map++);
-      SetTile(id, *pending_w_map);
-      pending_w_map++;
-      pending_w_cmap++;
+    for (i = 0u; i != MAX_ROWS && pending_w_i != 0; ++i, --pending_w_i) {
+      gbsa_map_set_bg_attr(BG_ID_BG, SCREENMAPWIDTHCLIP(pending_w_x), y_offset, *(pending_w_cmap++));
+      gbsa_map_set_bg_tile(BG_ID_BG, SCREENMAPWIDTHCLIP(pending_w_x++), y_offset, *(pending_w_map++));
     }
   } else
 #endif
   {  // DMG Row Load
-    for (i = 0u; i != 5 && pending_w_i != 0; ++i, --pending_w_i) {
-      // set_bkg_tiles(MOD_32(pending_w_x++), MOD_32(pending_w_y), 1, 1, pending_w_map++);
-      id = 0x9800 + MOD_32(pending_w_x++) + ((UINT16)y_offset << 5);
-      SetTile(id, *pending_w_map);
-      pending_w_map++;
+    for (i = 0u; i != MAX_ROWS && pending_w_i != 0; ++i, --pending_w_i) {
+      gbsa_map_set_bg_tile(BG_ID_BG, SCREENMAPWIDTHCLIP(pending_w_x++), pending_w_y, *(pending_w_map++));
     }
   }
 
@@ -114,26 +108,20 @@ void ScrollUpdateRow(INT16 x, INT16 y) {
   PUSH_BANK(image_bank);
 
   screen_x = x;
-  screen_y = MOD_32(y);
+  screen_y = SCREENMAPHEIGHTCLIP(y);
 
   for (i = 0; i != SCREEN_TILE_REFRES_W; i++) {
-    id = 0x9800 + MOD_32(screen_x++) + ((UINT16)screen_y << 5);
-
 #ifdef CGB
-    PUSH_BANK(image_attr_bank);
-    VBK_REG = 1;
-    SetTile(id, *(cmap++));
-    VBK_REG = 0;
-    POP_BANK;
+    gbsa_map_set_bg_attr(BG_ID_BG, SCREENMAPWIDTHCLIP(screen_x), screen_y, *(cmap++));
 #endif
-    SetTile(id, *(map++));
+    gbsa_map_set_bg_tile(BG_ID_BG, SCREENMAPWIDTHCLIP(screen_x++), screen_y, *(map++));
   }
 
   // Activate Actors in Row
   for (i = 1; i != actors_len; i++) {
     if (actors[i].pos.y >> 3 == y) {
       INT16 tx = actors[i].pos.x >> 3;
-      if (U_LESS_THAN(x, tx + 1) && U_LESS_THAN(tx, x + 24)) {
+      if (U_LESS_THAN(x, tx + 1) && U_LESS_THAN(tx, x + SCREEN_TILE_REFRES_W + 1)) {
         ActivateActor(i);
       }
     }
@@ -150,31 +138,21 @@ void ScrollUpdateColumnR() {
 
   PUSH_BANK(image_bank);
 
-  x_offset = MOD_32(pending_h_x);
+  x_offset = SCREENMAPWIDTHCLIP(pending_h_x);
 
 #ifdef CGB
   if (_cpu == CGB_TYPE) {  // Color Column Load
-    for (i = 0u; i != 5 && pending_h_i != 0; ++i, pending_h_i--) {
-      id = 0x9800 + (0x1F & (x_offset)) + ((0x1F & (MOD_32(pending_h_y))) << 5);
-      PUSH_BANK(image_attr_bank);
-      VBK_REG = 1;
-      // set_bkg_tiles(x_offset, MOD_32(pending_h_y), 1, 1, pending_h_cmap);
-      SetTile(id, *pending_h_cmap);
-      VBK_REG = 0;
-      POP_BANK;
-      // set_bkg_tiles(x_offset, MOD_32(pending_h_y++), 1, 1, pending_h_map);
-      SetTile(id, *pending_h_map);
-      pending_h_y++;
+    for (i = 0u; i != MAX_ROWS && pending_h_i != 0; ++i, pending_h_i--) {
+      gbsa_map_set_bg_attr(BG_ID_BG, x_offset, SCREENMAPHEIGHTCLIP(pending_h_y), *pending_h_cmap);
+      gbsa_map_set_bg_tile(BG_ID_BG, x_offset, SCREENMAPHEIGHTCLIP(pending_h_y++), *pending_h_map);
       pending_h_map += image_tile_width;
       pending_h_cmap += image_tile_width;
     }
   } else
 #endif
   {  // DMG Column Load
-    for (i = 0u; i != 5 && pending_h_i != 0; ++i, pending_h_i--) {
-      // set_bkg_tiles(x_offset, MOD_32(pending_h_y++), 1, 1, pending_h_map);
-      id = 0x9800 + (0x1F & (x_offset)) + ((0x1F & (MOD_32(pending_h_y++))) << 5);
-      SetTile(id, *pending_h_map);
+    for (i = 0u; i != MAX_ROWS && pending_h_i != 0; ++i, pending_h_i--) {
+      gbsa_map_set_bg_tile(BG_ID_BG, x_offset, SCREENMAPHEIGHTCLIP(pending_h_y++), *pending_h_map);
       pending_h_map += image_tile_width;
     }
   }

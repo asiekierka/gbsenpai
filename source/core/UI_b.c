@@ -1,3 +1,4 @@
+#include "shim/platform.h"
 #pragma bank 1
 
 #include "UI.h"
@@ -51,7 +52,7 @@ void UIInit_b() __banked {
 
 #ifdef CGB
   VBK_REG = 1;
-  fill_win_rect(0, 0, 20, 18, ui_bkg_tile);
+  fill_win_rect(0, 0, WINDOWTILEWIDTH, WINDOWTILEHEIGHT, ui_bkg_tile);
   VBK_REG = 0;
 #endif
 
@@ -129,7 +130,7 @@ void UIDrawFrame_b(UBYTE x, UBYTE y, UBYTE width, UBYTE height) __banked {
 }
 
 void UIDrawDialogueFrame_b(UBYTE h) __banked {
-  UIDrawFrame_b(0, 0, 19, h);
+  UIDrawFrame_b(0, 0, WINDOWTILEWIDTH - 1, h);
 }
 
 void UISetColor_b(UBYTE color) __banked {
@@ -139,7 +140,7 @@ void UISetColor_b(UBYTE color) __banked {
   // work in rom without reseting here
   set_bkg_data(ui_while_tile, 1, ui_white);
   set_bkg_data(ui_black_tile, 1, ui_black);
-  fill_win_rect(0, 0, 20, 18, id);
+  fill_win_rect(0, 0, WINDOWTILEWIDTH, WINDOWTILEHEIGHT, id);
 }
 
 void UIShowText_b() __banked {
@@ -239,7 +240,7 @@ void UIDrawTextBufferChar_b() {
     ptr = BankDataPtr(FONT_BANK) + FONT_BANK_OFFSET;
 
     // Determine if text can fit on line
-    text_remaining = 18 - text_x;
+    text_remaining = (WINDOWTILEWIDTH - 2) - text_x;
     word_len = 0;
     for (i = text_count; i != text_size; i++) {
       // Skip special characters when calculating word length
@@ -248,7 +249,7 @@ void UIDrawTextBufferChar_b() {
       }
       word_len++;
     }
-    if (UBYTE_LESS_THAN(text_remaining, word_len) && UBYTE_LESS_THAN(word_len, 18u)) {
+    if (UBYTE_LESS_THAN(text_remaining, word_len) && UBYTE_LESS_THAN(word_len, (WINDOWTILEWIDTH - 2))) {
       text_x = 0;
       text_y++;
     }
@@ -259,11 +260,10 @@ void UIDrawTextBufferChar_b() {
 
       SetBankedBkgData(TEXT_BUFFER_START + i, 1, ptr + ((UWORD)letter * 16), FONT_BANK);
       tile = TEXT_BUFFER_START + i;
-      id = (UINT16)GetWinAddr() +
+      gbsa_map_set_bg_tile(BG_ID_WINDOW,
            MOD_32((text_x + 1 + avatar_enabled * 2 + menu_enabled +
-                   (text_y >= text_num_lines ? 9 : 0))) +
-           ((UINT16)MOD_32((text_y % text_num_lines) + 1) << 5);
-      SetTile(id, tile);
+                   (text_y >= text_num_lines ? 9 : 0))),
+           ((UINT16)MOD_32((text_y % text_num_lines) + 1)), tile);
 
       text_tile_count++;
     }
@@ -280,7 +280,7 @@ void UIDrawTextBufferChar_b() {
       text_x = 0;
       text_y++;
       text_count++;
-    } else if (UBYTE_GT_THAN(text_x, 17u)) {
+    } else if (UBYTE_GT_THAN(text_x, (WINDOWTILEWIDTH - 3))) {
       text_x = 0;
       text_y++;
     }
@@ -378,9 +378,9 @@ void UIDrawMenuCursor_b() {
   UBYTE i;
   UINT16 addr;
   for (i = 0; i != menu_num_options; i++) {
-      addr = (UINT16)GetWinAddr() +
-             (i >= text_num_lines ? 10 : 1) +
-             (((i % text_num_lines) + 1) << 5);
-      SetTile(addr, menu_index == (BYTE)i ? ui_cursor_tiles : ui_bg_tiles);
+      gbsa_map_set_bg_tile(BG_ID_WINDOW,
+             (i >= text_num_lines ? 10 : 1),
+             (((i % text_num_lines) + 1)),
+             menu_index == (BYTE)i ? ui_cursor_tiles : ui_bg_tiles);
   }
 }

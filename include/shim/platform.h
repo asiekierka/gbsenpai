@@ -28,10 +28,10 @@ void gbsa_fx_fade(uint8_t to_black, uint8_t level /* 5 - 0; 5 - least, 0 - most 
 void gbsa_tile_set_data(uint8_t id, const uint8_t *data);
 void gbsa_map_set_bg_tile(uint8_t bg_id, uint8_t x, uint8_t y, uint16_t id);
 void gbsa_map_set_bg_attr(uint8_t bg_id, uint8_t x, uint8_t y, uint16_t id);
-void gbsa_map_set_bg_scroll(uint8_t x, uint8_t y);
+void gbsa_map_set_bg_scroll(int x, int y);
 
 void gbsa_update_viewport_size(int width, int height);
-void gbsa_window_set_pos(uint8_t x, uint8_t y);
+void gbsa_window_set_pos(int x, int y);
 
 void gbsa_sprite_set_enabled(uint8_t enabled);
 void gbsa_sprite_move(int id, int x, int y);

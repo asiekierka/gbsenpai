@@ -12,8 +12,13 @@ include $(DEVKITARM)/gba_rules
 GAME_DIR	:= sample_cgb
 GAME_CGB	:= true
 
-# Enable widescreen support (224x144). Smaller maps/UIs will automatically scale and center.
-ENGINE_FEAT_WIDESCREEN := true
+# Enable widescreen support. Smaller maps/UIs will automatically scale and center.
+# The following values are valid:
+#   0: 160x144
+#   1: 224x144
+#   2: 240x160
+
+ENGINE_FEAT_WIDESCREEN := 2
 
 # Enable smooth fade in/out transitions.
 ENGINE_FEAT_SMOOTH_FADES := true
@@ -70,9 +75,13 @@ endif
 ifeq ($(ENGINE_DEBUG),true)
 	CFLAGS += -DDEBUG
 endif
-ifeq ($(ENGINE_FEAT_WIDESCREEN),true)
+ifeq ($(ENGINE_FEAT_WIDESCREEN),1)
 	CFLAGS += -DFEAT_WIDESCREEN
 endif
+ifeq ($(ENGINE_FEAT_WIDESCREEN),2)
+	CFLAGS += -DFEAT_WIDESCREEN -DFEAT_WIDESCREEN_240
+endif
+CFLAGS += -DFEAT_FAST_LOADS
 ifeq ($(ENGINE_FEAT_SMOOTH_FADES),true)
 	CFLAGS += -DFEAT_SMOOTH_FADES
 endif
