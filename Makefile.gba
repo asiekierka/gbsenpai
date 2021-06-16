@@ -79,6 +79,9 @@ endif
 ifeq ($(ENGINE_FEAT_BORDER),true)
 	CFLAGS += -DFEAT_BORDER
 endif
+ifneq ($(ENGINE_MULTIBOOT),true)
+	CFLAGS += -DFEAT_SAVING
+endif
 
 CXXFLAGS	:=	$(CFLAGS) -fno-rtti -fno-exceptions
 

@@ -1,4 +1,6 @@
 #include "shim/platform.h"
+#include <tonc_types.h>
+
 #pragma bank 4
 
 #include "ScriptRunner.h"
@@ -1273,9 +1275,13 @@ void Script_IfActorPos_b() {
  * ----------------------------
  * Store current scene, player position and direction, current sprite and variable values into RAM
  */
+#ifdef FEAT_SAVING
+EWRAM_CODE
+#endif
 void Script_SaveData_b() {
   UWORD i;
 
+#ifdef FEAT_SAVING
   ENABLE_RAM;
 
   RAMPtr = gbsa_sram_get_ptr(RAM_START_PTR);
@@ -1308,6 +1314,7 @@ void Script_SaveData_b() {
   }
 
   DISABLE_RAM;
+#endif
 }
 
 /*
@@ -1315,10 +1322,14 @@ void Script_SaveData_b() {
  * ----------------------------
  * Restore current scene, player position and direction, current sprite and variable values from RAM
  */
+#ifdef FEAT_SAVING
+EWRAM_CODE
+#endif
 void Script_LoadData_b() {
   UINT16 scene_next_index;
   UWORD i;
 
+#ifdef FEAT_SAVING
   ENABLE_RAM;
 
   RAMPtr = gbsa_sram_get_ptr(RAM_START_PTR);
@@ -1343,7 +1354,7 @@ void Script_LoadData_b() {
     map_next_sprite = (UWORD)((*(RAMPtr++)) * 256) + *RAMPtr;
 
     // Load variable values
-    RAMPtr = (UBYTE*)RAM_START_VARS_PTR;
+    RAMPtr = gbsa_sram_get_ptr(RAM_START_VARS_PTR);
     for (i = 0; i < NUM_VARIABLES; i++) {
       script_variables[i] = RAMPtr[i];
     }
@@ -1356,6 +1367,7 @@ void Script_LoadData_b() {
   }
 
   DISABLE_RAM;
+#endif
 }
 
 /*
@@ -1363,11 +1375,16 @@ void Script_LoadData_b() {
  * ----------------------------
  * Clear current data in RAM
  */
+#ifdef FEAT_SAVING
+EWRAM_CODE
+#endif
 void Script_ClearData_b() {
+#ifdef FEAT_SAVING
   ENABLE_RAM;
   RAMPtr = gbsa_sram_get_ptr(RAM_START_PTR);
   RAMPtr[0] = FALSE;
   DISABLE_RAM;
+#endif
 }
 
 /*
@@ -1378,7 +1395,11 @@ void Script_ClearData_b() {
  *   arg0: High 8 bits for flag index
  *   arg1: Low 8 bits for flag index
  */
+#ifdef FEAT_SAVING
+EWRAM_CODE
+#endif
 void Script_IfSavedData_b() {
+#ifdef FEAT_SAVING
   UBYTE jump;
 
   ENABLE_RAM;
@@ -1390,6 +1411,7 @@ void Script_IfSavedData_b() {
   if (jump) {  // True path, jump to position specified by ptr
     active_script_ctx.script_ptr = active_script_ctx.script_start_ptr + (script_cmd_args[0] * 256) + script_cmd_args[1];
   }
+#endif
 }
 
 /*
