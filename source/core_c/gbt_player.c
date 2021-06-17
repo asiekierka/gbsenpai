@@ -78,15 +78,12 @@ static uint8_t gbt_update_pattern_pointers; // set to 1 by jump effects
 static inline void _gbt_skip_channel(const uint8_t **data) {
     uint8_t a = *((*data)++);
     if (a & 0x80) {
-        // more bytes
         a = *((*data)++);
         if (a & 0x80) {
-            // one more byte
-            a = *((*data)++);
+            (*data)++;
         }
     } else if (a & 0x40) {
-        // one more byte
-        a = *((*data)++);
+        (*data)++;
     }
 }
 
@@ -102,9 +99,8 @@ static void gbt_update_effects_bank1(void);
  */
 static void gbt_get_pattern_ptr(uint8_t pattern_number) {
     const uint8_t *bank = gbsa_patch_get_bank(gbt_bank) - 0x4000;
-    uint8_t *ptr_table = (uint8_t*) (bank + gbt_song);
-    gbt_current_step_data_ptr = ptr_table[pattern_number << 1] | ((ptr_table[(pattern_number << 1) + 1] << 8));
-    debug_printf(LOG_DEBUG, "gbt_current_step_data_ptr = %d for pattern %d", gbt_current_step_data_ptr, gbt_current_pattern);
+    uint8_t *ptr_table = (uint8_t*) (bank + gbt_song) + (pattern_number << 1);
+    gbt_current_step_data_ptr = ptr_table[0] | ((ptr_table[1] << 8));
 }
 
 /**
@@ -119,7 +115,6 @@ static void gbt_get_pattern_ptr_banked(uint8_t pattern_number) {
     if (gbt_current_step_data_ptr == 0) {
         gbt_current_pattern = 0;
     }
-    debug_printf(LOG_DEBUG, "gbt_current_step_data_ptr = %d for pattern %d", gbt_current_step_data_ptr, gbt_current_pattern);
 }
 
 void gbt_play(uint16_t offset, uint8_t bank, uint8_t speed) {
@@ -191,7 +186,7 @@ void gbt_play(uint16_t offset, uint8_t bank, uint8_t speed) {
     NR43_REG = 0;
     NR44_REG = 0;
 
-    NR50_REG = 0x77;
+    NR50_REG = 0x77; // 100%
 
     gbt_playing = 1;
 }
@@ -250,15 +245,6 @@ void gbt_update(void) {
         return;
     }
 
-    const uint8_t *bank = gbsa_patch_get_bank(gbt_bank) - 0x4000;
-    const uint8_t *data = bank + gbt_current_step_data_ptr;
-    const uint8_t *data_start = data;
-
-    gbt_update_bank1(&data);
-
-    gbt_current_step_data_ptr += (data - data_start);
-
-    // If any effect has changed the pattern or step, update
     if (gbt_update_pattern_pointers) {
         gbt_update_pattern_pointers = 0;
         gbt_have_to_stop_next_step = 0;
@@ -278,7 +264,18 @@ void gbt_update(void) {
 
             gbt_current_step_data_ptr = data - data_start;
         }
-    } else {
+    }
+
+    const uint8_t *bank = gbsa_patch_get_bank(gbt_bank) - 0x4000;
+    const uint8_t *data = bank + gbt_current_step_data_ptr;
+    const uint8_t *data_start = data;
+
+    gbt_update_bank1(&data);
+
+    gbt_current_step_data_ptr += (data - data_start);
+
+    // If any effect has changed the pattern or step, update
+    if (!gbt_update_pattern_pointers) {
         // Increment step
         gbt_current_step++;
         if (gbt_current_step == 64) {
@@ -361,7 +358,6 @@ static void gbt_channel_1_handle(const uint8_t **data) {
             gbt_instr[0] = (ch & 0x30) << 2;
             gbt_channel_1_set_effect(ch & 0x0F, data);
             channel1_refresh_registers_trig();
-
         } else {
             // Freq + Instr + Volume
             gbt_instr[0] = (ch & 0x30) << 2;
@@ -424,7 +420,7 @@ static uint8_t channel1_update_effects() {
                 return 0;
             } else {
                 gbt_freq[0] = freq;
-                return freq > 0;
+                return 1;
             }
         } else {
             // Sweep up
@@ -611,7 +607,7 @@ static uint8_t channel2_update_effects() {
                 return 0;
             } else {
                 gbt_freq[1] = freq;
-                return freq > 0;
+                return 1;
             }
         } else {
             // Sweep up
@@ -762,22 +758,20 @@ static void gbt_channel3_load_instrument(uint8_t instr) {
     const uint8_t *wave = gbt_wave[instr];
     volatile uint16_t *wave_ram = (vu16*) REG_WAVE_RAM;
 
-    NR30_REG ^= 0x40;
     for (int i = 0; i < 8; i++, wave += 2) {
         wave_ram[i] = (wave[0]) | (wave[1] << 8);
     }
-    NR30_REG ^= 0x40;
 }
 
 static void channel3_refresh_registers_trig(void) {
-    NR30_REG = 0;
-
     if (gbt_channel3_loaded_instrument != gbt_instr[2]) {
         gbt_channel3_load_instrument(gbt_instr[2]);
+        NR30_REG = (NR30_REG & 0x40) ^ 0x40;
+    } else {
+	NR30_REG = (NR30_REG & 0x40);
     }
 
-    NR30_REG = 0x80;
-
+    NR30_REG |= 0x80;
     NR31_REG = 0;
     NR32_REG = gbt_vol[2];
     NR33_REG = gbt_freq[2] & 0xFF;
@@ -797,7 +791,7 @@ static uint8_t channel3_update_effects() {
     // Cut note
     if (gbt_ticks_elapsed == gbt_cut_note_tick[2]) {
         gbt_cut_note_tick[2] = 0xFF;
-        NR30_REG = 0;
+        NR30_REG &= 0x40;
         NR32_REG = 0;
         NR34_REG = 0x80; // start
     }
@@ -817,7 +811,7 @@ static uint8_t channel3_update_effects() {
                 return 0;
             } else {
                 gbt_freq[2] = freq;
-                return freq > 0;
+                return 1;
             }
         } else {
             // Sweep up
@@ -874,7 +868,7 @@ static uint8_t gbt_channel_3_set_effect(uint8_t effect, const uint8_t **data) {
         case 2: { // Cut note
             gbt_cut_note_tick[2] = args;
             if (gbt_cut_note_tick[2] == 0) {
-                NR30_REG = 0;
+                NR30_REG &= 0x40;
                 NR32_REG = 0;
                 NR34_REG = 0x80;
             }
