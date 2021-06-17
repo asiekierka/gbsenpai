@@ -4,6 +4,7 @@
 #include "BankManager.h"
 #include "data_ptrs.h"
 #include "gbt_player.h"
+#include "shim/platform.h"
 
 #define MAX_MUSIC 255
 
@@ -47,70 +48,26 @@ void MusicUpdate() {
 void SoundPlayTone(UWORD tone, UBYTE frames) {
   tone_frames = frames;
   
-#ifdef __GBA__
-  // enable sound
-  NR52_REG = 0x80;
-
-  // play tone on channel 1
-  NR10_REG = 0x00;
-  NR11_REG = (0x0U << 6U) | 0x01U;
-  NR12_REG = (0x0FU << 4U) | 0x00U;
-  NR13_REG = (tone & 0x00FF);
-  NR14_REG = 0x80 | ((tone & 0x0700) >> 8U);
-
-  // enable volume
-  NR50_REG = 0x77;
-
-  // enable channel 1
-  NR51_REG |= 0x11;
-#endif
+  gbsa_sound_channel1_update(SOUND_MODE_DISABLE, 0, 0, 0);
+  gbsa_sound_start(0);
+  gbsa_sound_channel1_update(SOUND_MODE_TRIGGER, (0x0U << 6U) | 0x01U, (0x0FU << 4U) | 0x00U, tone);
+  gbsa_sound_pan_update(gbsa_sound_pan_get() | 0x11);
 }
 
 void SoundStopTone() {
-#ifdef __GBA__
-  // stop tone on channel 1
-  NR12_REG = 0x00;
-#endif
+  gbsa_sound_channel1_update(SOUND_MODE_DISABLE, 0, 0, 0);
 }
 
 void SoundPlayBeep(UBYTE pitch) {
-#ifdef __GBA__
-  // enable sound
-  NR52_REG = 0x80;
-
-  // play beep sound on channel 4
-  NR41_REG = 0x01;
-  NR42_REG = (0x0FU << 4U);
-  NR43_REG = 0x20 | 0x08 | pitch;
-  NR44_REG = 0x80 | 0x40;
-
-  // enable volume
-  NR50_REG = 0x77;
-
-  // enable channel 4
-  NR51_REG |= 0x88;
-
-  // no delay
-#endif
+  gbsa_sound_channel4_update(SOUND_MODE_DISABLE, 0, 0);
+  gbsa_sound_start(0);
+  gbsa_sound_channel4_update(SOUND_MODE_CH4_BEEP, (0x0F << 4), (0x20 | 0x08 | pitch));
+  gbsa_sound_pan_update(gbsa_sound_pan_get() | 0x88);
 }
 
 void SoundPlayCrash() {
-#ifdef __GBA__
-  // enable sound
-  NR52_REG = 0x80;
-
-  // play crash sound on channel 4
-  NR41_REG = 0x01;
-  NR42_REG = (0x0FU << 4U) | 0x02U;
-  NR43_REG = 0x13;
-  NR44_REG = 0x80;
-
-  // enable volume
-  NR50_REG = 0x77;
-
-  // enable channel 4
-  NR51_REG |= 0x88;
-
-  // no delay
-#endif
+  gbsa_sound_channel4_update(SOUND_MODE_DISABLE, 0, 0);
+  gbsa_sound_start(0);
+  gbsa_sound_channel4_update(SOUND_MODE_TRIGGER, (0x0F << 4) | 0x02, 0x13);
+  gbsa_sound_pan_update(gbsa_sound_pan_get() | 0x88);
 }

@@ -7,7 +7,6 @@
  * C rewrite Copyright (c) 2021, Adrian "asie" Siekierka <kontakt@asie.pl>
  */
 
-#include "tonc_memmap.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -163,41 +162,14 @@ void gbt_play(uint16_t offset, uint8_t bank, uint8_t speed) {
     gbt_cut_note_tick[2] = 0xFF;
     gbt_cut_note_tick[3] = 0xFF;
 
-    NR52_REG = 0x80;
-    NR51_REG = 0x00;
-    NR50_REG = 0x00; // 0%
-
-    NR10_REG = 0;
-    NR11_REG = 0;
-    NR12_REG = 0;
-    NR13_REG = 0;
-    NR14_REG = 0;
-    NR21_REG = 0;
-    NR22_REG = 0;
-    NR23_REG = 0;
-    NR24_REG = 0;
-    NR30_REG = 0;
-    NR31_REG = 0;
-    NR32_REG = 0;
-    NR33_REG = 0;
-    NR34_REG = 0;
-    NR41_REG = 0;
-    NR42_REG = 0;
-    NR43_REG = 0;
-    NR44_REG = 0;
-
-    NR50_REG = 0x77; // 100%
+    gbsa_sound_start(1);
 
     gbt_playing = 1;
 }
 
 void gbt_pause(uint8_t unpause) {
     gbt_playing = unpause;
-    if (unpause) {
-        NR50_REG = 0x77;
-    } else {
-        NR50_REG = 0;
-    }
+    gbsa_sound_pause(!unpause);
 }
 
 void gbt_loop(uint8_t loop) {
@@ -206,9 +178,7 @@ void gbt_loop(uint8_t loop) {
 
 void gbt_stop(void) {
     gbt_playing = 0;
-    NR50_REG = 0;
-    NR51_REG = 0;
-    NR52_REG = 0;
+    gbsa_sound_stop();
 }
 
 void gbt_enable_channels(uint8_t mask) {
@@ -380,18 +350,11 @@ static void gbt_channel_1_handle(const uint8_t **data) {
 }
 
 static void channel1_refresh_registers_trig(void) {
-    NR10_REG = 0;
-    NR11_REG = gbt_instr[0];
-    NR12_REG = gbt_vol[0];
-    NR13_REG = gbt_freq[0] & 0xFF;
-    NR14_REG = (gbt_freq[0] >> 8) | 0x80; // start
+    gbsa_sound_channel1_update(SOUND_MODE_TRIGGER, gbt_instr[0], gbt_vol[0], gbt_freq[0]);
 }
 
 static void channel1_refresh_registers_notrig(void) {
-    NR10_REG = 0;
-    NR11_REG = gbt_instr[0];
-    NR13_REG = gbt_freq[0] & 0xFF;
-    NR14_REG = (gbt_freq[0] >> 8);
+    gbsa_sound_channel1_update(SOUND_MODE_UPDATE, gbt_instr[0], gbt_vol[0], gbt_freq[0]);
 }
 
 /**
@@ -401,8 +364,7 @@ static uint8_t channel1_update_effects() {
     // Cut note
     if (gbt_ticks_elapsed == gbt_cut_note_tick[0]) {
         gbt_cut_note_tick[0] = 0xFF;
-        NR12_REG = 0;
-        NR14_REG = 0x80; // start
+        gbsa_sound_channel1_update(SOUND_MODE_DISABLE, 0, 0, 0);
     }
 
     // Arpeggio or sweep
@@ -428,8 +390,7 @@ static uint8_t channel1_update_effects() {
             if ((freq & 0x0700) == 0) {
                 gbt_freq[0] = freq;
                 gbt_arpeggio_enabled[0] = 0;
-                NR12_REG = 0;
-                NR14_REG = 0x80; // start
+                gbsa_sound_channel1_update(SOUND_MODE_DISABLE, 0, 0, 0);
                 return 1;
             } else {
                 gbt_freq[0] = freq;
@@ -477,8 +438,7 @@ static uint8_t gbt_channel_1_set_effect(uint8_t effect, const uint8_t **data) {
         case 2: { // Cut note
             gbt_cut_note_tick[0] = args;
             if (gbt_cut_note_tick[0] == 0) {
-                NR12_REG = 0;
-                NR14_REG = 0x80;
+                gbsa_sound_channel1_update(SOUND_MODE_DISABLE, 0, 0, 0);
             }
             return 0;
         } break;
@@ -569,16 +529,11 @@ static void gbt_channel_2_handle(const uint8_t **data) {
 }
 
 static void channel2_refresh_registers_trig(void) {
-    NR21_REG = gbt_instr[1];
-    NR22_REG = gbt_vol[1];
-    NR23_REG = gbt_freq[1] & 0xFF;
-    NR24_REG = (gbt_freq[1] >> 8) | 0x80; // start
+    gbsa_sound_channel2_update(SOUND_MODE_TRIGGER, gbt_instr[1], gbt_vol[1], gbt_freq[1]);
 }
 
 static void channel2_refresh_registers_notrig(void) {
-    NR21_REG = gbt_instr[1];
-    NR23_REG = gbt_freq[1] & 0xFF;
-    NR24_REG = (gbt_freq[1] >> 8);
+    gbsa_sound_channel2_update(SOUND_MODE_UPDATE, gbt_instr[1], gbt_vol[1], gbt_freq[1]);
 }
 
 /**
@@ -588,8 +543,7 @@ static uint8_t channel2_update_effects() {
     // Cut note
     if (gbt_ticks_elapsed == gbt_cut_note_tick[1]) {
         gbt_cut_note_tick[1] = 0xFF;
-        NR22_REG = 0;
-        NR24_REG = 0x80; // start
+        gbsa_sound_channel2_update(SOUND_MODE_DISABLE, 0, 0, 0);
     }
 
     // Arpeggio or sweep
@@ -615,8 +569,7 @@ static uint8_t channel2_update_effects() {
             if ((freq & 0x700) == 0) {
                 gbt_freq[1] = freq;
                 gbt_arpeggio_enabled[1] = 0;
-                NR22_REG = 0;
-                NR24_REG = 0x80; // start
+                gbsa_sound_channel2_update(SOUND_MODE_DISABLE, 0, 0, 0);
                 return 1;
             } else {
                 gbt_freq[1] = freq;
@@ -664,8 +617,7 @@ static uint8_t gbt_channel_2_set_effect(uint8_t effect, const uint8_t **data) {
         case 2: { // Cut note
             gbt_cut_note_tick[1] = args;
             if (gbt_cut_note_tick[1] == 0) {
-                NR22_REG = 0;
-                NR24_REG = 0x80;
+                gbsa_sound_channel2_update(SOUND_MODE_DISABLE, 0, 0, 0);
             }
             return 0;
         } break;
@@ -754,34 +706,18 @@ static void gbt_channel_3_handle(const uint8_t **data) {
     }
 }
 
-static void gbt_channel3_load_instrument(uint8_t instr) {
-    const uint8_t *wave = gbt_wave[instr];
-    volatile uint16_t *wave_ram = (vu16*) REG_WAVE_RAM;
-
-    for (int i = 0; i < 8; i++, wave += 2) {
-        wave_ram[i] = (wave[0]) | (wave[1] << 8);
-    }
-}
-
 static void channel3_refresh_registers_trig(void) {
+    gbsa_sound_channel3_update(SOUND_MODE_DISABLE, 0, 0);
+
     if (gbt_channel3_loaded_instrument != gbt_instr[2]) {
-        gbt_channel3_load_instrument(gbt_instr[2]);
-        NR30_REG = (NR30_REG & 0x40) ^ 0x40;
-    } else {
-	NR30_REG = (NR30_REG & 0x40);
+        gbsa_sound_channel3_load_instrument(gbt_wave[gbt_instr[2]]);
     }
 
-    NR30_REG |= 0x80;
-    NR31_REG = 0;
-    NR32_REG = gbt_vol[2];
-    NR33_REG = gbt_freq[2] & 0xFF;
-    NR34_REG = (gbt_freq[2] >> 8) | 0x80; // start
+    gbsa_sound_channel3_update(SOUND_MODE_TRIGGER, gbt_vol[2], gbt_freq[2]);
 }
 
 static void channel3_refresh_registers_notrig(void) {
-    // Don't Restart Waveform!
-    NR33_REG = gbt_freq[2] & 0xFF;
-    NR34_REG = (gbt_freq[2] >> 8);
+    gbsa_sound_channel3_update(SOUND_MODE_UPDATE, gbt_vol[2], gbt_freq[2]);
 }
 
 /**
@@ -791,9 +727,7 @@ static uint8_t channel3_update_effects() {
     // Cut note
     if (gbt_ticks_elapsed == gbt_cut_note_tick[2]) {
         gbt_cut_note_tick[2] = 0xFF;
-        NR30_REG &= 0x40;
-        NR32_REG = 0;
-        NR34_REG = 0x80; // start
+        gbsa_sound_channel3_update(SOUND_MODE_DISABLE, 0, 0);
     }
 
     // Arpeggio or sweep
@@ -819,8 +753,7 @@ static uint8_t channel3_update_effects() {
             if ((freq & 0x700) == 0) {
                 gbt_freq[2] = freq;
                 gbt_arpeggio_enabled[2] = 0;
-                NR32_REG = 0;
-                NR34_REG = 0x80; // start
+                gbsa_sound_channel3_update(SOUND_MODE_DISABLE, 0, 0);
                 return 1;
             } else {
                 gbt_freq[2] = freq;
@@ -868,9 +801,7 @@ static uint8_t gbt_channel_3_set_effect(uint8_t effect, const uint8_t **data) {
         case 2: { // Cut note
             gbt_cut_note_tick[2] = args;
             if (gbt_cut_note_tick[2] == 0) {
-                NR30_REG &= 0x40;
-                NR32_REG = 0;
-                NR34_REG = 0x80;
+                gbsa_sound_channel3_update(SOUND_MODE_DISABLE, 0, 0);
             }
             return 0;
         } break;
@@ -948,16 +879,7 @@ static void gbt_channel_4_handle(const uint8_t **data) {
 }
 
 static void channel4_refresh_registers(void) {
-    debug_printf(LOG_DEBUG, "setting channel 4 to %d, %d", gbt_vol[3], gbt_instr[3]);
-#ifdef __GBA__
-    REG_SOUND4CNT_L = (gbt_vol[3]) << 8;
-    REG_SOUND4CNT_H = gbt_instr[3] | 0x8000;
-#else
-    NR41_REG = 0;
-    NR42_REG = gbt_vol[3];
-    NR43_REG = gbt_instr[3];
-    NR44_REG = 0x80; // start
-#endif
+        gbsa_sound_channel4_update(SOUND_MODE_UPDATE, gbt_instr[3], gbt_vol[3]);
 }
 
 /**
@@ -967,8 +889,7 @@ static uint8_t channel4_update_effects() {
     // Cut note
     if (gbt_ticks_elapsed == gbt_cut_note_tick[3]) {
         gbt_cut_note_tick[3] = 0xFF;
-        NR42_REG = 0;
-        NR44_REG = 0x80; // start
+        gbsa_sound_channel4_update(SOUND_MODE_DISABLE, 0, 0);
     }
 
     return 0;
@@ -985,8 +906,7 @@ static uint8_t gbt_channel_4_set_effect(uint8_t effect, const uint8_t **data) {
         case 2: { // Cut note
             gbt_cut_note_tick[3] = args;
             if (gbt_cut_note_tick[3] == 0) {
-                NR42_REG = 0;
-                NR44_REG = 0x80;
+               gbsa_sound_channel4_update(SOUND_MODE_DISABLE, 0, 0);
             }
             return 0;
         } break;
@@ -1029,8 +949,7 @@ static void gbt_update_bank1(const uint8_t **data) {
     gbt_channel_3_handle(data);
     gbt_channel_4_handle(data);
 
-    // Handle panning
-    NR51_REG = gbt_pan[0] | gbt_pan[1] | gbt_pan[2] | gbt_pan[3];
+    gbsa_sound_pan_update(gbt_pan[0] | gbt_pan[1] | gbt_pan[2] | gbt_pan[3]);
 }
 
 static void gbt_update_effects_bank1() {

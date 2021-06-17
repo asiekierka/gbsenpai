@@ -51,33 +51,25 @@ void gbsa_sram_enable(void);
 void gbsa_sram_disable(void);
 uint8_t *gbsa_sram_get_ptr(uint32_t offset);
 
-// GBA sound hack
+// Sound
 
-#ifdef __GBA__
-typedef volatile unsigned char vu8;
+enum sound_update_mode {
+	SOUND_MODE_DISABLE,
+	SOUND_MODE_UPDATE,
+	SOUND_MODE_TRIGGER,
+	SOUND_MODE_CH4_BEEP
+};
 
-#define NR10_REG *(vu8*)(0x04000060)
-#define NR11_REG *(vu8*)(0x04000062)
-#define NR12_REG *(vu8*)(0x04000063)
-#define NR13_REG *(vu8*)(0x04000064)
-#define NR14_REG *(vu8*)(0x04000065)
-#define NR21_REG *(vu8*)(0x04000068)
-#define NR22_REG *(vu8*)(0x04000069)
-#define NR23_REG *(vu8*)(0x0400006C)
-#define NR24_REG *(vu8*)(0x0400006D)
-#define NR30_REG *(vu8*)(0x04000070)
-#define NR31_REG *(vu8*)(0x04000072)
-#define NR32_REG *(vu8*)(0x04000073)
-#define NR33_REG *(vu8*)(0x04000074)
-#define NR34_REG *(vu8*)(0x04000075)
-#define NR41_REG *(vu8*)(0x04000078)
-#define NR42_REG *(vu8*)(0x04000079)
-#define NR43_REG *(vu8*)(0x0400007C)
-#define NR44_REG *(vu8*)(0x0400007D)
-#define NR50_REG *(vu8*)(0x04000080)
-#define NR51_REG *(vu8*)(0x04000081)
-#define NR52_REG *(vu8*)(0x04000084)
-#endif
+void gbsa_sound_start(uint8_t reinit);
+void gbsa_sound_pause(uint8_t paused);
+void gbsa_sound_stop(void);
+void gbsa_sound_channel1_update(uint8_t mode, uint8_t instr, uint8_t vol, uint16_t freq);
+void gbsa_sound_channel2_update(uint8_t mode, uint8_t instr, uint8_t vol, uint16_t freq);
+void gbsa_sound_channel3_load_instrument(const uint8_t *instr);
+void gbsa_sound_channel3_update(uint8_t mode, uint8_t vol, uint16_t freq);
+void gbsa_sound_channel4_update(uint8_t mode, uint8_t instr, uint8_t vol);
+uint8_t gbsa_sound_pan_get(void);
+void gbsa_sound_pan_update(uint8_t pan);
 
 // Debug code
 

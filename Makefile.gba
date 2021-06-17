@@ -57,7 +57,7 @@ TARGET		:= $(GAME_DIR)_mb
 endif
 BUILD		:= build_$(TARGET)
 SOURCES		:= $(GAME_DIR) source source/core source/states \
-	source/core_c source/shim
+	source/core_c source/shim source/platform/gba
 INCLUDES	:= include $(GAME_DIR) $(BUILD)
 DATA		:=
 GRAPHICS	:= $(GAME_DIR)
