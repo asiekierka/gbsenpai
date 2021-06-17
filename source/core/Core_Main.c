@@ -4,6 +4,10 @@
 #include <string.h>
 #include <stdlib.h> // GBSA - rand.h
 
+#ifdef __GBA__
+#include <tonc_memmap.h>
+#endif
+
 #include "Actor.h"
 #include "BankManager.h"
 #include "Camera.h"
@@ -22,7 +26,6 @@
 #include "data_ptrs.h"
 #include "main.h"
 #include "shim/platform.h"
-#include "tonc_memmap.h"
 
 UBYTE game_time = 0;
 UBYTE seedRand = 2;
@@ -69,7 +72,7 @@ void vbl_update() {
 }
 
 void lcd_update() {
-	// TODO GBSA
+    // TODO GBSA
   /* if (LYC_REG == 0x0) {
     if(WY_REG == 0x0) {
       HIDE_SPRITES;
@@ -194,13 +197,21 @@ int core_start() {
         // Seed on first button press
         if (joy) {
           seedRand--;
+#if defined(__GBA__)
           srand(((REG_TM1CNT_L << 8) & 0x1FF00)+game_time);
+#else
+          srand(game_time);
+#endif
         }
       } else {
         // Seed on first button release
           if (!joy) {
           seedRand = FALSE;
+#if defined(__GBA__)
           srand(rand()+((REG_TM1CNT_L << 8) & 0x1FF00)+game_time);
+#else
+          srand(rand()+game_time);
+#endif
         }
       }
     }
@@ -278,10 +289,10 @@ int core_start() {
     // Disable timer script
     timer_script_duration = 0;
 
-	// Configured in platform
-	gbsa_palette_set_bkg_dmg(PAL_DEF(0U, 1U, 2U, 3U));
-	gbsa_palette_set_sprite_dmg(0, PAL_DEF(0U, 0U, 1U, 3U));
-	gbsa_palette_set_sprite_dmg(1, PAL_DEF(0U, 0U, 1U, 3U));
+    // Configured in platform
+    gbsa_palette_set_bkg_dmg(PAL_DEF(0U, 1U, 2U, 3U));
+    gbsa_palette_set_sprite_dmg(0, PAL_DEF(0U, 0U, 1U, 3U));
+    gbsa_palette_set_sprite_dmg(1, PAL_DEF(0U, 0U, 1U, 3U));
 
     // Force Clear Emote
     move_sprite(0, 0, 0);

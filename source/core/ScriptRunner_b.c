@@ -1,5 +1,9 @@
 #include "shim/platform.h"
+
+#ifdef FEAT_SAVING
+// TODO: Remove GBA dependency
 #include <tonc_types.h>
+#endif
 
 #pragma bank 4
 

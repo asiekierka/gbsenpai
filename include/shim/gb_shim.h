@@ -77,6 +77,7 @@ void set_win_tiles(int x, int y, int width, int height, const uint8_t *tiles);
 #define J_SELECT	(1 << 6)
 #define J_START		(1 << 7)
 
+#ifdef __GBA__
 #ifdef FEAT_WIDESCREEN
 #ifdef FEAT_WIDESCREEN_240
 #define SCREENTILEWIDTH		30
@@ -91,6 +92,17 @@ void set_win_tiles(int x, int y, int width, int height, const uint8_t *tiles);
 #define SCREENTILEWIDTH		20
 #define SCREENTILEHEIGHT 	18
 #define SCREENMAPWIDTHSHIFT 5
+#endif
+#elif defined(__NDS__)
+#ifdef FEAT_WIDESCREEN
+#define SCREENTILEWIDTH		32
+#define SCREENTILEHEIGHT 	24
+#define SCREENMAPWIDTHSHIFT 6
+#else
+#define SCREENTILEWIDTH		20
+#define SCREENTILEHEIGHT 	18
+#define SCREENMAPWIDTHSHIFT 5
+#endif
 #endif
 #define SCREENMAPHEIGHTSHIFT 5
 #define SCREENMAPWIDTH (1 << SCREENMAPWIDTHSHIFT)

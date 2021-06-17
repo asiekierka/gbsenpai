@@ -1,0 +1,71 @@
+#---------------------------------------------------------------------------------
+.SUFFIXES:
+#---------------------------------------------------------------------------------
+ifeq ($(strip $(DEVKITARM)),)
+$(error "Please set DEVKITARM in your environment. export DEVKITARM=<path to>devkitARM")
+endif
+
+# GAME_DIR is the directory containing your game data.
+export GAME_DIR := sample_cgb
+export GAME_CGB := true
+
+GAME_TITLE     := My Wonderful Homebrew
+GAME_SUBTITLE1 := built with devkitARM
+GAME_SUBTITLE2 := http://devitpro.org
+
+# Enable widescreen support. Smaller maps/UIs will automatically scale and center.
+# The following values are valid:
+#   0: 160x144
+#   1: 256x192
+
+export ENGINE_FEAT_WIDESCREEN := 1
+
+# Enable smooth fade in/out transitions.
+export ENGINE_FEAT_SMOOTH_FADES := true
+
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# !!! Unless you know what you're doing, do not edit anything below this line! !!!
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+# Enable debugging information.
+#export ENGINE_DEBUG := true
+
+export TARGET	:=	$(GAME_DIR)
+export TOPDIR	:=	$(CURDIR)
+
+include $(DEVKITARM)/ds_rules
+
+.PHONY: checkarm7 checkarm9 clean
+
+#---------------------------------------------------------------------------------
+# main targets
+#---------------------------------------------------------------------------------
+all: checkarm7 checkarm9 $(TARGET).nds
+
+#---------------------------------------------------------------------------------
+checkarm7:
+	$(MAKE) -C source/platform/nds/arm7
+	
+#---------------------------------------------------------------------------------
+checkarm9:
+	$(MAKE) -C source/platform/nds/arm9
+
+#---------------------------------------------------------------------------------
+$(TARGET).nds	: $(NITRO_FILES) source/platform/nds/arm7/$(TARGET).elf source/platform/nds/arm9/$(TARGET).elf
+	ndstool	-c $(TARGET).nds -7 source/platform/nds/arm7/$(TARGET).elf -9 source/platform/nds/arm9/$(TARGET).elf \
+	-b $(GAME_ICON) "$(GAME_TITLE);$(GAME_SUBTITLE1);$(GAME_SUBTITLE2)" \
+	$(_ADDFILES)
+
+#---------------------------------------------------------------------------------
+arm7/$(TARGET).elf:
+	$(MAKE) -C source/platform/nds/arm7
+	
+#---------------------------------------------------------------------------------
+arm9/$(TARGET).elf:
+	$(MAKE) -C source/platform/nds/arm9
+
+#---------------------------------------------------------------------------------
+clean:
+	$(MAKE) -C source/platform/nds/arm9 clean
+	$(MAKE) -C source/platform/nds/arm7 clean
+	rm -f $(TARGET).nds

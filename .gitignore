@@ -1,0 +1,5 @@
+build*
+source/platform/nds/arm7/*.elf
+source/platform/nds/arm7/build*
+source/platform/nds/arm9/*.elf
+source/platform/nds/arm9/build*

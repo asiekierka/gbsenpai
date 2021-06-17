@@ -33,7 +33,7 @@ UINT8 pending_w_i;
 Pos* scroll_target = 0;
 
 #ifdef FEAT_FAST_LOADS
-#define MAX_ROWS 255
+#define MAX_ROWS 32
 #else
 #define MAX_ROWS 5
 #endif

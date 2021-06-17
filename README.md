@@ -38,6 +38,21 @@ The GBA port is currently based on the devkitARM toolchain created by the devkit
 2. Run `make -f Makefile.gba`.
 3. Enjoy. (Hopefully. I've only tested this on Linux...)
 
+### NDS
+
+The NDS port is currently based on the devkitARM toolchain created by the devkitPro organization, alongside the libnds library.
+
+There is some missing functionality:
+
+* Sound is not yet implemented.
+* Saving is not yet implemented.
+
+1. Edit Makefile.nds. In particular:
+    - Set GAME_DIR to your game directory name,
+    - Set GAME_CGB to true if your game targets the GBC, and to false otherwise.
+2. Run `make -f Makefile.nds`.
+3. Enjoy.
+
 ## License
 
 **gbsenpai** is licensed under the terms of the MIT license, similar to the original GB Studio engine.
