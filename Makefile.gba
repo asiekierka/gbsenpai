@@ -36,6 +36,9 @@ ENGINE_FEAT_SMOOTH_FADES := true
 # Enable mGBA debugging information.
 #ENGINE_DEBUG := true
 
+# Enable mGBA profiling information.
+#ENGINE_DEBUG_PROFILE := true
+
 #---------------------------------------------------------------------------------
 # TARGET is the name of the output
 # BUILD is the directory where object files & intermediate files will be placed
@@ -74,6 +77,9 @@ ifeq ($(GAME_CGB),true)
 endif
 ifeq ($(ENGINE_DEBUG),true)
 	CFLAGS += -DDEBUG
+endif
+ifeq ($(ENGINE_DEBUG_PROFILE),true)
+	CFLAGS += -DDEBUG_PROFILE
 endif
 ifeq ($(ENGINE_FEAT_WIDESCREEN),1)
 	CFLAGS += -DFEAT_WIDESCREEN

@@ -49,6 +49,30 @@ static uint32_t cgb_layer[32] = { 0 };
 #define EMU_BGMAP_SIZE BG_SIZE0
 #endif
 
+#ifdef DEBUG_PROFILE
+#define MAX_PROFILE_STACK 8
+#define PROFILE_RAW (REG_TM2CNT_L | (REG_TM3CNT_L << 16))
+static const char *profile_names[MAX_PROFILE_STACK];
+static uint32_t profile_times[MAX_PROFILE_STACK];
+static int32_t profile_pos = 0;
+
+void gbsa_profile_push(const char *name) {
+    if (profile_pos >= 0 && profile_pos < MAX_PROFILE_STACK) {
+        profile_names[profile_pos] = name;
+        profile_times[profile_pos] = PROFILE_RAW;
+    }
+    profile_pos++;
+}
+
+void gbsa_profile_pop(void) {
+    profile_pos--;
+    if (profile_pos >= 0 && profile_pos < MAX_PROFILE_STACK) {
+        int32_t time = (int32_t) (PROFILE_RAW - profile_times[profile_pos]);
+        debug_printf(LOG_INFO, "%s: %d cycles", profile_names[profile_pos], time);
+    }
+}
+#endif
+
 void gbsa_init(void) {
     REG_DISPCNT = DCNT_BLANK;
 
@@ -88,6 +112,13 @@ void gbsa_init(void) {
 #ifdef DEBUG
     REG_DEBUG_ENABLE = 0xC0DE;
     debug_printf(LOG_WARN, "Debugging enabled.");
+
+#ifdef DEBUG_PROFILE
+    REG_TM2CNT_L = 0;
+    REG_TM2CNT_H = TM_FREQ_1 | TM_ENABLE;
+    REG_TM3CNT_L = 0;
+    REG_TM3CNT_H = TM_FREQ_1 | TM_ENABLE | TM_CASCADE;
+#endif
 #endif
 
     gbsa_update_viewport_size(SCREENWIDTH, SCREENHEIGHT);

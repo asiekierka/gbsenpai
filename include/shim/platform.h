@@ -9,6 +9,14 @@ typedef void (*gbsa_int_handler)(void);
 #define BG_ID_BG 0
 #define BG_ID_WINDOW 1
 
+#ifdef DEBUG_PROFILE
+void gbsa_profile_push(const char *name);
+void gbsa_profile_pop(void);
+#else
+static inline void gbsa_profile_push(const char *name) { }
+static inline void gbsa_profile_pop(void) { }
+#endif
+
 void gbsa_init(void);
 void gbsa_exit(void);
 

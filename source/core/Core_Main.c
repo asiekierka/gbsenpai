@@ -100,7 +100,7 @@ int core_start() {
   // Set interupt handlers
   add_VBL(vbl_update);
   add_TIM(MusicUpdate);
-  add_LCD(lcd_update);
+  // add_LCD(lcd_update);
 
 #ifdef CGB
   // TMA_REG = _cpu == CGB_TYPE ? 120U : 0xBCU;
@@ -177,7 +177,9 @@ int core_start() {
     if (!vbl_count) {
       wait_vbl_done();
     }
-    
+
+    gbsa_profile_push("vblank");
+
     delta_time = vbl_count == 1u ? 0u : 1u;
     vbl_count = 0;
 
@@ -244,6 +246,8 @@ int core_start() {
     game_time++;
 
     POP_BANK;
+
+    gbsa_profile_pop();
 
     /* Game Core Loop End ***********************************/
   }
