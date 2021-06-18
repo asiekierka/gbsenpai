@@ -152,9 +152,9 @@ void gbsa_update_viewport_size(int width, int height) {
     viewport_height = height;
 
     REG_WIN1L = bg_x_offset;
-    REG_WIN1R = bg_x_offset + width - 1;
+    REG_WIN1R = bg_x_offset + width;
     REG_WIN1T = bg_y_offset;
-    REG_WIN1B = bg_y_offset + height - 1;
+    REG_WIN1B = bg_y_offset + height;
 
     shadow_hofs = hofs - bg_x_offset;
     shadow_vofs = vofs - bg_y_offset;
@@ -186,13 +186,13 @@ static inline uint16_t gbsa_gbc_to_gba_color(uint16_t v) {
 
 void gbsa_palette_set_bkg(int idx, const uint16_t *data) {
 #ifdef CGB
-    pal_bg_mem[(idx << 4) | 0] = gbsa_gbc_to_gba_color(data[0]);
-    pal_bg_mem[(idx << 4) | 1] = gbsa_gbc_to_gba_color(data[1]);
-    pal_bg_mem[(idx << 4) | 2] = gbsa_gbc_to_gba_color(data[2]);
-    pal_bg_mem[(idx << 4) | 3] = gbsa_gbc_to_gba_color(data[3]);
+    pal_bg_mem[(idx << 4) | 8] = gbsa_gbc_to_gba_color(data[0]);
+    pal_bg_mem[(idx << 4) | 9] = gbsa_gbc_to_gba_color(data[1]);
+    pal_bg_mem[(idx << 4) | 10] = gbsa_gbc_to_gba_color(data[2]);
+    pal_bg_mem[(idx << 4) | 11] = gbsa_gbc_to_gba_color(data[3]);
 
     // For windows
-    memcpy32(pal_bg_mem + (idx << 4) + 8, pal_bg_mem + (idx << 4), 2);
+    // memcpy32(pal_bg_mem + (idx << 4) + 8, pal_bg_mem + (idx << 4), 2);
 #endif
 }
 
@@ -207,13 +207,13 @@ void gbsa_palette_set_sprite(int idx, const uint16_t *data) {
 
 void gbsa_palette_set_bkg_dmg(uint8_t v) {
 #ifndef CGB
-    pal_bg_mem[0] = dmg_palette[(v >> 0) & 0x03];
-    pal_bg_mem[1] = dmg_palette[(v >> 2) & 0x03];
-    pal_bg_mem[2] = dmg_palette[(v >> 4) & 0x03];
-    pal_bg_mem[3] = dmg_palette[(v >> 6) & 0x03];
+    pal_bg_mem[8] = dmg_palette[(v >> 0) & 0x03];
+    pal_bg_mem[9] = dmg_palette[(v >> 2) & 0x03];
+    pal_bg_mem[10] = dmg_palette[(v >> 4) & 0x03];
+    pal_bg_mem[11] = dmg_palette[(v >> 6) & 0x03];
 
     // For windows
-    memcpy32(pal_bg_mem + 8, pal_bg_mem, 2);
+    // memcpy32(pal_bg_mem + 8, pal_bg_mem, 2);
 #endif
 }
 
@@ -238,9 +238,9 @@ void gbsa_window_set_pos(int x, int y) {
         int win_y_offset = bg_y_offset + (viewport_height - WINDOWHEIGHT);
 
         REG_WIN0L = win_x_offset + x - 7;
-        REG_WIN0R = win_x_offset + WINDOWWIDTH - 1;
+        REG_WIN0R = win_x_offset + WINDOWWIDTH;
         REG_WIN0T = win_y_offset + y;
-        REG_WIN0B = win_y_offset + WINDOWHEIGHT - 1;
+        REG_WIN0B = win_y_offset + WINDOWHEIGHT;
 
         REG_BG1HOFS = -(x - 7 + win_x_offset);
         REG_BG1VOFS = -(y + win_y_offset);
@@ -359,13 +359,11 @@ void gbsa_map_set_bg_scroll(int x, int y) {
 void gbsa_tile_set_data(uint8_t id, const uint8_t *data) {
     int long_id = id;
     u32 *ptr = (u32*) (MEM_VRAM + (long_id << 5));
-    u32 *wptr = (u32*) (MEM_VRAM + (long_id << 5) + (1 << 13));
 
-    for (int i = 0; i < 8; i++, ptr++, wptr++, data += 2) {
+    for (int i = 0; i < 8; i++, ptr++, data += 2) {
         uint32_t ones = lut_expand_8_32[data[0]];
         uint32_t twos = lut_expand_8_32[data[1]] << 1;
-        *ptr = ones | twos;
-        *wptr = (ones | twos) + 0x88888888;
+        *ptr = (ones | twos | 0x88888888);
     }	
 }
 
@@ -382,7 +380,7 @@ void gbsa_map_set_bg_tile(uint8_t bg_id, uint8_t x, uint8_t y, uint16_t id) {
     } else {
         ptr = (u16*) (MEM_VRAM + 0x8000 + curr_layer_offset + (y << 6) + ((x & 0x1F) << 1) + ((x & 0x20) << 6));
     }
-    *ptr = ((*ptr) & 0xFC00) | (id & 0x00FF) | (bg_id ? 0x100 : 0);
+    *ptr = ((*ptr) & 0xFC00) | (id & 0x00FF);
 }
 
 void gbsa_map_set_bg_attr(uint8_t bg_id, uint8_t x, uint8_t y, uint16_t id) {

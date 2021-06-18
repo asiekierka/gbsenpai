@@ -1280,7 +1280,9 @@ void Script_IfActorPos_b() {
  * Store current scene, player position and direction, current sprite and variable values into RAM
  */
 #ifdef FEAT_SAVING
+#ifdef __GBA__
 EWRAM_CODE
+#endif
 #endif
 void Script_SaveData_b() {
   UWORD i;
@@ -1327,7 +1329,9 @@ void Script_SaveData_b() {
  * Restore current scene, player position and direction, current sprite and variable values from RAM
  */
 #ifdef FEAT_SAVING
+#ifdef __GBA__
 EWRAM_CODE
+#endif
 #endif
 void Script_LoadData_b() {
   UINT16 scene_next_index;
@@ -1380,7 +1384,9 @@ void Script_LoadData_b() {
  * Clear current data in RAM
  */
 #ifdef FEAT_SAVING
+#ifdef __GBA__
 EWRAM_CODE
+#endif
 #endif
 void Script_ClearData_b() {
 #ifdef FEAT_SAVING
@@ -1400,7 +1406,9 @@ void Script_ClearData_b() {
  *   arg1: Low 8 bits for flag index
  */
 #ifdef FEAT_SAVING
+#ifdef __GBA__
 EWRAM_CODE
+#endif
 #endif
 void Script_IfSavedData_b() {
 #ifdef FEAT_SAVING

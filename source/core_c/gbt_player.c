@@ -121,7 +121,7 @@ void gbt_play(uint16_t offset, uint8_t bank, uint8_t speed) {
     gbt_bank = bank;
     gbt_speed = speed;
 
-    debug_printf(LOG_DEBUG, "Called gbt_play: offset=%d, bank=%d, speed=%d", offset, bank, speed);
+    debug_printf(LOG_DEBUG, "gbt_play offset=%d, bank=%d, speed=%d", offset, bank, speed);
 
     gbt_get_pattern_ptr(0);
 

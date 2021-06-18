@@ -2,6 +2,7 @@
 #define __SHIM_PLATFORM_H__
 
 #include <stddef.h>
+#include <stdio.h>
 #include <stdint.h>
 
 typedef void (*gbsa_int_handler)(void);
@@ -105,7 +106,11 @@ enum debug_log_level {
 		REG_DEBUG_FLAGS = 0x100 | (level); \
 	}
 #else
-#define debug_printf(level, format, ...)
+#define debug_printf(level, format, ...) \
+	{ \
+		iprintf((format), ##__VA_ARGS__); \
+		iprintf("\n"); \
+	}
 #endif
 #else
 #define debug_printf(level, format, ...)
