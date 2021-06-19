@@ -22,6 +22,10 @@ First, you need to prepare your game's source code.
     - include/banks.h,
     - include/data_ptrs.h.
 
+Note that if you ejected the engine and made modifications to it, you will have to reproduce the 
+modifications in gbsenpai. This is a port, not an emulator - the ported engine matches vanilla
+GB Studio.
+
 In addition, you will need:
 
 - a reasonably recent version of Python 3.x.

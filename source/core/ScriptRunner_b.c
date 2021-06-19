@@ -1,8 +1,9 @@
 #include "shim/platform.h"
 
 #ifdef FEAT_SAVING
-// TODO: Remove GBA dependency
+#ifdef __GBA__
 #include <tonc_types.h>
+#endif
 #endif
 
 #pragma bank 4
@@ -2341,9 +2342,10 @@ void Script_EngFieldSet_b()
 
 void Script_EngFieldSetWord_b()
 {
-  UWORD *ptr;
+  UBYTE *ptr;
   ptr = engine_fields_addr + ((script_cmd_args[0] * 256) + script_cmd_args[1]);
-  *ptr = (script_cmd_args[2] * 256) + script_cmd_args[3];
+  ptr[0] = script_cmd_args[3];
+  ptr[1] = script_cmd_args[2];
 }
 
 void Script_EngFieldSetVar_b()
@@ -2357,12 +2359,13 @@ void Script_EngFieldSetVar_b()
 
 void Script_EngFieldSetWordVar_b()
 {
-  UWORD *ptr;
+  UBYTE *ptr;
   UBYTE var_lo, var_hi;
   ptr = engine_fields_addr + ((script_cmd_args[0] * 256) + script_cmd_args[1]);
   var_hi = script_variables[(script_cmd_args[2] * 256) + script_cmd_args[3]];
   var_lo = script_variables[(script_cmd_args[4] * 256) + script_cmd_args[5]];
-  *ptr = (var_hi * 256) + var_lo;
+  ptr[0] = var_lo;
+  ptr[1] = var_hi;
 }
 
 void Script_EngFieldStore_b()

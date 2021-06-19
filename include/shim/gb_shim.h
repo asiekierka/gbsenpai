@@ -124,6 +124,8 @@ void set_win_tiles(int x, int y, int width, int height, const uint8_t *tiles);
 #define MAXWNDPOSX		(WINDOWWIDTH + MINWNDPOSX - 1)
 #define MAXWNDPOSY		(WINDOWHEIGHT + MINWNDPOSY - 1)
 
+#define GB_SRAM_SIZE		8192
+
 // Remove attributes unused on modern platforms.
 
 #define __banked
