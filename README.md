@@ -8,7 +8,7 @@
 
 ## Compatibility
 
-gbsenpai should be currently compatible with source exports made in GB Studio v2.0.0-beta5. Support for older or newer versions is not guaranteed; v3alpha is currently unsupported.
+gbsenpai should be compatible with source exports made in GB Studio v2.0.0-beta5. Other versions are currently not supported.
 
 ## Porting your game
 
