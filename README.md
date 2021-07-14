@@ -22,9 +22,9 @@ First, you need to prepare your game's source code.
     - include/banks.h,
     - include/data_ptrs.h.
 
-Note that if you ejected the engine and made modifications to it, you will have to reproduce the 
-modifications in gbsenpai. This is a port, not an emulator - the ported engine matches vanilla
-GB Studio.
+Note that if you ejected the engine and made modifications to it, you will have to make equivalent 
+modifications in gbsenpai. This is not an emulator! However, as it is a port, it tries to stick
+fairly closely to the original source code - the process shouldn't be too difficult.
 
 In addition, you will need:
 
@@ -35,6 +35,8 @@ From here, the instructions differ depending on port.
 ### GBA
 
 The GBA port is currently based on the devkitARM toolchain created by the devkitPro organization, alongside the libtonc library.
+
+Alternatively, you can find a tutorial provided by the GB Studio Central [here](https://gbstudiocentral.com/tips/gbsenpai/).
 
 1. Edit Makefile.gba. In particular:
     - Set GAME_DIR to your game directory name,
